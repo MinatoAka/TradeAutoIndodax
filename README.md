@@ -9,7 +9,7 @@ Bot trading otomatis untuk market Indodax yang berjalan di Google Apps Script.
 
 Repositori ini dirancang untuk membantu Anda menjalankan strategi trading sederhana dengan trigger otomatis berdasarkan harga pasar, status bot, cooldown, dan batas transaksi harian.
 
-> Disclaimer penting:
+> Disclaimer:<br />
 > Dokumentasi ini hanya untuk keperluan edukasi dan eksplorasi teknis. Repo ini bukan saran investasi dan bukan jaminan profit. API key dan secret key adalah kredensial sensitif; jangan dibagikan ke siapapun.
 
 ## Fitur utama
