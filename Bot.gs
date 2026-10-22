@@ -89,6 +89,11 @@ function validateTradeOpportunity(config, hargaSekarang, side) {
   var assetBalance = getAvailableBalance(getPairBaseAsset(config.pair));
 
   if (side === 'BUY') {
+    if (String(config.status || '').toUpperCase() === 'PEGANG') {
+      Logger.log('🛡️ Pengaman ekstra: posisi masih terbuka, beli dibatalkan.');
+      return false;
+    }
+
     if (idrBalance < config.modalPerTrade) {
       Logger.log('⚠️ Saldo IDR tidak cukup: ' + idrBalance + ' < ' + config.modalPerTrade);
       return false;
@@ -107,6 +112,26 @@ function validateTradeOpportunity(config, hargaSekarang, side) {
   return true;
 }
 
+function hasOpenPositionGuard(config) {
+  var cfg = config || getBotConfig();
+  var currentStatus = String(cfg.status || 'KOSONG').toUpperCase();
+  var state = getTradeState();
+  var lastTradeAt = Number(state.lastTradeAt || 0);
+  var cooldownMs = Number(cfg.cooldownMs || 600000);
+
+  if (currentStatus === 'PEGANG') {
+    Logger.log('🛡️ Single-position guard aktif: status PEGANG, transaksi beli diblokir.');
+    return false;
+  }
+
+  if (lastTradeAt && (Date.now() - lastTradeAt) < cooldownMs) {
+    Logger.log('🛡️ Single-position guard aktif: cooldown belum selesai.');
+    return false;
+  }
+
+  return true;
+}
+
 function jalankanBotUtama() {
   var config = getBotConfig();
   var props = PropertiesService.getScriptProperties();
@@ -118,6 +143,10 @@ function jalankanBotUtama() {
     Logger.log('Harga ' + config.pair.toUpperCase() + ': Rp ' + hargaSekarang.toLocaleString('id-ID') + ' | Status: ' + config.status);
 
     if (config.status === 'KOSONG' && hargaSekarang <= config.buyTrigger) {
+      if (!hasOpenPositionGuard(config)) {
+        return;
+      }
+
       Logger.log('🟢 Sinyal BELI terdeteksi! Mengecek kelayakan...');
 
       if (!validateTradeOpportunity(config, hargaSekarang, 'BUY')) {
