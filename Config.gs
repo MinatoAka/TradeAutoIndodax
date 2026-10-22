@@ -7,7 +7,7 @@ function getBotConfig() {
   var props = PropertiesService.getScriptProperties();
   var pair = normalizeSymbol(props.getProperty('BOT_PAIR') || 'ethidr');
 
-  return {
+  var config = {
     pair: pair,
     buyTrigger: Number(props.getProperty('BOT_BUY_TRIGGER') || 42500000),
     sellTrigger: Number(props.getProperty('BOT_SELL_TRIGGER') || 44500000),
@@ -17,6 +17,11 @@ function getBotConfig() {
     maxDailyTrades: Number(props.getProperty('BOT_MAX_DAILY_TRADES') || 1),
     status: String(props.getProperty('STATUS_BOT_ETH') || 'KOSONG').toUpperCase()
   };
+
+  Logger.log('=== getBotConfig ===');
+  Logger.log(JSON.stringify(config, null, 2));
+
+  return config;
 }
 
 function setBotStatus(status) {
