@@ -88,11 +88,15 @@ function validateTradeOpportunity(config, hargaSekarang, side) {
   var idrBalance = getAvailableBalance('idr');
   var assetBalance = getAvailableBalance(getPairBaseAsset(config.pair));
 
+  Logger.log('📝 Log validasi peluang: side=' + side + ', harga=' + hargaSekarang + ', status=' + (config.status || 'UNKNOWN'));
+
   if (side === 'BUY') {
     if (String(config.status || '').toUpperCase() === 'PEGANG') {
       Logger.log('🛡️ Pengaman ekstra: posisi masih terbuka, beli dibatalkan.');
       return false;
     }
+
+    Logger.log('📝 Log saldo BUY: idrBalance=' + idrBalance + ', required=' + config.modalPerTrade);
 
     if (idrBalance < config.modalPerTrade) {
       Logger.log('⚠️ Saldo IDR tidak cukup: ' + idrBalance + ' < ' + config.modalPerTrade);
@@ -102,6 +106,8 @@ function validateTradeOpportunity(config, hargaSekarang, side) {
   }
 
   if (side === 'SELL') {
+    Logger.log('📝 Log saldo SELL: assetBalance=' + assetBalance + ', pair=' + config.pair);
+
     if (assetBalance <= 0) {
       Logger.log('⚠️ Saldo aset tidak cukup untuk sell.');
       return false;
@@ -118,17 +124,21 @@ function hasOpenPositionGuard(config) {
   var state = getTradeState();
   var lastTradeAt = Number(state.lastTradeAt || 0);
   var cooldownMs = Number(cfg.cooldownMs || 600000);
+  var now = Date.now();
+
+  Logger.log('📝 Log guard posisi: status=' + currentStatus + ', lastTradeAt=' + lastTradeAt + ', cooldownMs=' + cooldownMs + ', now=' + now);
 
   if (currentStatus === 'PEGANG') {
     Logger.log('🛡️ Single-position guard aktif: status PEGANG, transaksi beli diblokir.');
     return false;
   }
 
-  if (lastTradeAt && (Date.now() - lastTradeAt) < cooldownMs) {
-    Logger.log('🛡️ Single-position guard aktif: cooldown belum selesai.');
+  if (lastTradeAt && (now - lastTradeAt) < cooldownMs) {
+    Logger.log('🛡️ Single-position guard aktif: cooldown belum selesai. Sisa=' + (cooldownMs - (now - lastTradeAt)) + ' ms');
     return false;
   }
 
+  Logger.log('📝 Log guard posisi: aman untuk transaksi baru.');
   return true;
 }
 
@@ -140,10 +150,11 @@ function jalankanBotUtama() {
     var hargaSekarang = getTickerPrice(config.pair);
     var state = getTradeState();
 
-    Logger.log('Harga ' + config.pair.toUpperCase() + ': Rp ' + hargaSekarang.toLocaleString('id-ID') + ' | Status: ' + config.status);
+    Logger.log('📝 Log eksekusi bot: pair=' + config.pair.toUpperCase() + ', harga=' + hargaSekarang + ', status=' + config.status + ', buyTrigger=' + config.buyTrigger + ', sellTrigger=' + config.sellTrigger);
 
     if (config.status === 'KOSONG' && hargaSekarang <= config.buyTrigger) {
       if (!hasOpenPositionGuard(config)) {
+        Logger.log('📝 Log: beli dibatalkan karena guard posisi aktif.');
         return;
       }
 
@@ -158,6 +169,7 @@ function jalankanBotUtama() {
       }
 
       var qty = calculateBuyQty(hargaSekarang, config.modalPerTrade, config.minQty);
+      Logger.log('📝 Log qty beli: qty=' + qty + ', modal=' + config.modalPerTrade + ', minQty=' + config.minQty);
       if (qty <= 0) {
         Logger.log('⚠️ Kuantitas beli invalid, dilewati.');
         return;
@@ -175,6 +187,7 @@ function jalankanBotUtama() {
           qty: qty,
           status: 'PEGANG'
         });
+        Logger.log('📝 Log: status bot diubah menjadi PEGANG setelah BUY sukses.');
       }
 
       return;
@@ -192,6 +205,7 @@ function jalankanBotUtama() {
       }
 
       var qtyToSell = calculateSellQty(config.pair, hargaSekarang, config.modalPerTrade, config.buyTrigger, config.minQty);
+      Logger.log('📝 Log qty jual: qtyToSell=' + qtyToSell + ', modal=' + config.modalPerTrade + ', buyTrigger=' + config.buyTrigger + ', minQty=' + config.minQty);
       if (qtyToSell <= 0) {
         Logger.log('⚠️ Tidak ada saldo aset yang cukup untuk dijual.');
         return;
@@ -209,6 +223,7 @@ function jalankanBotUtama() {
           qty: qtyToSell,
           status: 'KOSONG'
         });
+        Logger.log('📝 Log: status bot diubah menjadi KOSONG setelah SELL sukses.');
       }
 
       return;
