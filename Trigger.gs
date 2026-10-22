@@ -4,9 +4,8 @@
 // ==========================================
 
 function createBotTriggers() {
-  // Default: 15 menit.
-  // Jika mau 30 menit, jalankan createBotTrigger30Minutes() secara manual.
-  return createBotTriggerEveryMinutes(15);
+  // Default: 30 menit untuk strategi yang lebih aman.
+  return createBotTrigger30Minutes();
 }
 
 function createBotTrigger15Minutes() {
