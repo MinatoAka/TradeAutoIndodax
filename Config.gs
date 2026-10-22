@@ -9,8 +9,8 @@ function getBotConfig() {
 
   return {
     pair: pair,
-    buyTrigger: Number(props.getProperty('BOT_BUY_TRIGGER') || 41000000),
-    sellTrigger: Number(props.getProperty('BOT_SELL_TRIGGER') || 47000000),
+    buyTrigger: Number(props.getProperty('BOT_BUY_TRIGGER') || 42500000),
+    sellTrigger: Number(props.getProperty('BOT_SELL_TRIGGER') || 44500000),
     modalPerTrade: Number(props.getProperty('BOT_MODAL_PER_TRADE') || 15000),
     minQty: Number(props.getProperty('BOT_MIN_QTY') || 0.000001),
     cooldownMs: Number(props.getProperty('BOT_COOLDOWN_MS') || 1800000),
@@ -87,9 +87,9 @@ function setSinglePositionMode() {
 
 function setConservativeSafeStrategy() {
   var props = PropertiesService.getScriptProperties();
-  props.setProperty('BOT_BUY_TRIGGER', '41000000');
-  props.setProperty('BOT_SELL_TRIGGER', '47000000');
+  props.setProperty('BOT_BUY_TRIGGER', '42500000');
+  props.setProperty('BOT_SELL_TRIGGER', '44500000');
   props.setProperty('BOT_COOLDOWN_MS', '1800000');
   props.setProperty('BOT_MAX_DAILY_TRADES', '1');
-  Logger.log('✅ Strategi paling aman aktif: buyTrigger=41000000, sellTrigger=47000000, cooldown=30 menit, maxDailyTrades=1');
+  Logger.log('✅ Strategi aman aktif: buyTrigger=42500000, sellTrigger=44500000, cooldown=30 menit, maxDailyTrades=1');
 }
