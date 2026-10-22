@@ -142,12 +142,12 @@ function jalankanBotUtama() {
   var props = PropertiesService.getScriptProperties();
 
   try {
-    // 1. Ambil Harga (Ini udah otomatis pakai CACHE dari update Market.gs)
+    // Ambil Harga (Ini udah otomatis pakai CACHE dari update Market.gs)
     var hargaSekarang = getTickerPrice(config.pair);
     
     Logger.log('📝 Log eksekusi bot: pair=' + config.pair.toUpperCase() + ', harga=' + hargaSekarang + ', status=' + config.status);
 
-    // 2. Cek Sinyal DULU (Early Exit kalau nggak ada sinyal)
+    // Cek Sinyal DULU (Early Exit kalau nggak ada sinyal)
     var isBuySignal = (config.status === 'KOSONG' && hargaSekarang <= config.buyTrigger);
     var isSellSignal = (config.status === 'PEGANG' && hargaSekarang >= config.sellTrigger);
 
@@ -156,7 +156,7 @@ function jalankanBotUtama() {
       return; 
     }
 
-    // 3. KALAU ADA SINYAL, BARU TARIK SALDO (1 Request doang!)
+    // KALAU ADA SINYAL, BARU TARIK SALDO (1 Request doang!)
     Logger.log('🔔 Sinyal terdeteksi! Mengecek saldo & guard...');
     var saldo = getBalancesForTrade(config.pair); 
     var state = getTradeState();
@@ -164,7 +164,17 @@ function jalankanBotUtama() {
     // --- EKSEKUSI BELI ---
     if (isBuySignal) {
       if (!hasOpenPositionGuard(config)) return;
-      if (!validateTradeOpportunity(config, saldo.idr, saldo.asset, 'BUY')) return;
+      // Cek validasi
+      if (!validateTradeOpportunity(config, saldo.idr, saldo.asset, 'BUY')) {
+        // 🚨 CIRCUIT BREAKER: Matikan bot jika saldo IDR tidak cukup
+        if (saldo.idr < config.modalPerTrade) {
+          Logger.log('🛑 [CIRCUIT BREAKER] Saldo IDR tidak cukup. Mematikan trigger bot...');
+          props.deleteProperty('BOT_LAST_ERROR');
+          deleteBotTriggers();
+        }
+        return;
+      }
+      
       if (!canExecuteNewTrade(config, state)) return;
 
       var qty = calculateBuyQty(hargaSekarang, config.modalPerTrade, config.minQty);
@@ -182,7 +192,17 @@ function jalankanBotUtama() {
 
     // --- EKSEKUSI JUAL ---
     if (isSellSignal) {
-      if (!validateTradeOpportunity(config, saldo.idr, saldo.asset, 'SELL')) return;
+      // Cek validasi
+      if (!validateTradeOpportunity(config, saldo.idr, saldo.asset, 'SELL')) {
+        // 🚨 CIRCUIT BREAKER: Matikan bot jika status PEGANG tapi saldo aset 0 (Desync)
+        if (saldo.asset <= 0) {
+          Logger.log('🛑 [CIRCUIT BREAKER] Status PEGANG tapi saldo aset 0. Mereset status dan mematikan trigger...');
+          setBotStatus('KOSONG');
+          deleteBotTriggers();
+        }
+        return;
+      }
+      
       if (!canExecuteNewTrade(config, state)) return;
 
       // Panggil calculateSellQty pakai saldo yang udah ditarik di atas
