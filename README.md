@@ -9,7 +9,7 @@
 Bot trading otomatis untuk market Indodax yang dijalankan melalui Google Apps Script.
 
 > Disclaimer penting:
-> Panduan ini hanya untuk keperluan edukasi dan pengaturan bot di Google Apps Script. Repo ini bukan saran investasi atau jaminan profit. API key dan secret key adalah kredensial sensitif; jangan dibagikan ke repository publik, forum, atau chat. Gunakan akun yang Anda pahami risikonya dan lakukan testing dengan nominal kecil terlebih dahulu.
+> Panduan ini hanya untuk keperluan edukasi dan pengaturan bot di Google Apps Script. Repo ini bukan saran investasi atau jaminan profit. API key dan secret key adalah kredensial sensitif; jangan di-share ke publik.
 
 ## Fitur utama
 - Trading otomatis pada pair ETH/IDR atau pair lain yang Anda atur
@@ -24,8 +24,8 @@ Bot trading otomatis untuk market Indodax yang dijalankan melalui Google Apps Sc
 2. `runAutoSafeCalibration()` menghitung trigger aman
 3. Trigger disimpan di Script Properties
 4. Bot mengecek kondisi:
-   - beli saat `KOSONG` dan harga <= buyTrigger
-   - jual saat `PEGANG` dan harga >= sellTrigger
+    - beli saat `KOSONG` dan harga <= buyTrigger
+    - jual saat `PEGANG` dan harga >= sellTrigger
 5. Cooldown dan limit harian mencegah overtrading
 
 ## Setup API Key Indodax
@@ -74,6 +74,62 @@ function setConfigAwal() {
   props.setProperty('BOT_MIN_QTY', '0.000001');
   props.setProperty('BOT_COOLDOWN_MS', '1800000');
   props.setProperty('BOT_MAX_DAILY_TRADES', '1');
+}
+```
+
+## Konfigurasi manual yang tidak di-set otomatis oleh helper
+`runAutoSafeCalibration()` hanya otomatis mengisi trigger `BOT_BUY_TRIGGER` dan `BOT_SELL_TRIGGER` berdasarkan harga pasar saat ini. Helper ini tidak sekaligus mengatur setting lain yang sering dibutuhkan untuk menjalankan bot secara stabil, seperti:
+
+- `BOT_PAIR`
+- `BOT_MODAL_PER_TRADE`
+- `BOT_MIN_QTY`
+- `BOT_COOLDOWN_MS`
+- `BOT_MAX_DAILY_TRADES`
+- `STATUS_BOT_ETH`
+
+Jadi, kalau Anda ingin custom strategi yang lebih presisi, atur setting manual seperti contoh berikut:
+
+```javascript
+function setBotSettingsManual() {
+  var props = PropertiesService.getScriptProperties();
+
+  props.setProperty('BOT_PAIR', 'ethidr');
+  props.setProperty('BOT_BUY_TRIGGER', '42000000');
+  props.setProperty('BOT_SELL_TRIGGER', '45000000');
+  props.setProperty('BOT_MODAL_PER_TRADE', '15000');
+  props.setProperty('BOT_MIN_QTY', '0.000001');
+  props.setProperty('BOT_COOLDOWN_MS', '1800000');
+  props.setProperty('BOT_MAX_DAILY_TRADES', '1');
+  props.setProperty('STATUS_BOT_ETH', 'KOSONG');
+}
+```
+
+Atau gunakan helper yang sudah disediakan di repo untuk konfigurasi yang lebih rapi:
+
+```javascript
+function setConfigManualDenganHelper() {
+  setBotConfigManual({
+    pair: 'ethidr',
+    buyTrigger: 42000000,
+    sellTrigger: 45000000,
+    modalPerTrade: 15000,
+    minQty: 0.000001,
+    cooldownMs: 1800000,
+    maxDailyTrades: 1
+  });
+
+  setBotStatus('KOSONG');
+}
+```
+
+Catatan penting:
+- `runAutoSafeCalibration()` hanya aman dipakai saat status bot masih `KOSONG`.
+- Jika bot sedang `PEGANG`, helper akan membatalkan auto calibration agar tidak mengubah target saat posisi aktif.
+- Untuk mengecek konfigurasi yang sedang aktif:
+
+```javascript
+function debugConfig() {
+  Logger.log(JSON.stringify(getBotConfig(), null, 2));
 }
 ```
 
