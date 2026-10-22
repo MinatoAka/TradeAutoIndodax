@@ -13,8 +13,8 @@ function getBotConfig() {
     sellTrigger: Number(props.getProperty('BOT_SELL_TRIGGER') || 43000000),
     modalPerTrade: Number(props.getProperty('BOT_MODAL_PER_TRADE') || 15000),
     minQty: Number(props.getProperty('BOT_MIN_QTY') || 0.000001),
-    cooldownMs: Number(props.getProperty('BOT_COOLDOWN_MS') || 60000),
-    maxDailyTrades: Number(props.getProperty('BOT_MAX_DAILY_TRADES') || 6),
+    cooldownMs: Number(props.getProperty('BOT_COOLDOWN_MS') || 600000),
+    maxDailyTrades: Number(props.getProperty('BOT_MAX_DAILY_TRADES') || 1),
     status: String(props.getProperty('STATUS_BOT_ETH') || 'KOSONG').toUpperCase()
   };
 }
@@ -76,4 +76,11 @@ function resetStatusBot() {
   props.deleteProperty('BOT_TRADE_STATE');
   props.deleteProperty('BOT_TRADE_LOG');
   Logger.log('🔄 Status bot berhasil di-reset ke KOSONG.');
+}
+
+function setSinglePositionMode() {
+  var props = PropertiesService.getScriptProperties();
+  props.setProperty('BOT_COOLDOWN_MS', '600000');
+  props.setProperty('BOT_MAX_DAILY_TRADES', '1');
+  Logger.log('✅ Mode single-position aktif: cooldown 10 menit, maksimal 1 trade per hari.');
 }
