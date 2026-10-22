@@ -93,3 +93,43 @@ function setConservativeSafeStrategy() {
   props.setProperty('BOT_MAX_DAILY_TRADES', '1');
   Logger.log('✅ Strategi aman aktif: buyTrigger=42500000, sellTrigger=44500000, cooldown=30 menit, maxDailyTrades=1');
 }
+
+function calculateSafeTriggersFromPrice(currentPrice, buyDropPercent, sellRisePercent) {
+  if (!isFinite(Number(currentPrice)) || Number(currentPrice) <= 0) {
+    throw new Error('Harga saat ini tidak valid: ' + currentPrice);
+  }
+
+  var buyPercent = Number(buyDropPercent || 2);
+  var sellPercent = Number(sellRisePercent || 5);
+  var price = Number(currentPrice);
+
+  var buyTrigger = price * (1 - (buyPercent / 100));
+  var sellTrigger = price * (1 + (sellPercent / 100));
+
+  return {
+    currentPrice: price,
+    buyTrigger: Math.round(buyTrigger),
+    sellTrigger: Math.round(sellTrigger),
+    buyDropPercent: buyPercent,
+    sellRisePercent: sellPercent
+  };
+}
+
+function updateSafeTriggersFromCurrentPrice() {
+  var currentPrice = getTickerPrice('ethidr');
+  var result = calculateSafeTriggersFromPrice(currentPrice, 2, 5);
+
+  setBotConfigManual({
+    buyTrigger: result.buyTrigger,
+    sellTrigger: result.sellTrigger,
+    cooldownMs: 1800000,
+    maxDailyTrades: 1
+  });
+
+  Logger.log('✅ Trigger otomatis disesuaikan:');
+  Logger.log('Current price: ' + result.currentPrice);
+  Logger.log('Buy trigger: ' + result.buyTrigger);
+  Logger.log('Sell trigger: ' + result.sellTrigger);
+
+  return result;
+}
