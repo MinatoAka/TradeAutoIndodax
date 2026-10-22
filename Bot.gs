@@ -4,7 +4,6 @@
 // ==========================================
 
 function kirimOrder(symbol, side, type, price, qty) {
-  // ... (Fungsi kirimOrder lo udah sempurna, biarin aja sama persis) ...
   var credentials = requireApiCredentials();
   var normalizedSymbol = normalizeSymbol(symbol);
   var normalizedSide = String(side || '').toUpperCase();
