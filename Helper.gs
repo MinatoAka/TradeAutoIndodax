@@ -41,45 +41,6 @@ function setSafeTradingDefaults(options) {
   return true;
 }
 
-function updateSafeTriggersFromCurrentPrice(options) {
-  var opts = options || {};
-  var pair = String(opts.pair || 'ethidr').toLowerCase();
-  var currentPrice = getTickerPrice(pair);
-
-  var buyDrop = Number(opts.buyDropPercent || 2);
-  var sellRise = Number(opts.sellRisePercent || 5);
-  var cooldownMs = Number(opts.cooldownMs || 1800000);
-  var maxDailyTrades = Number(opts.maxDailyTrades || 1);
-
-  var result = calculateSafeTriggersFromPrice(currentPrice, buyDrop, sellRise);
-
-  setBotConfigManual({
-    pair: pair,
-    buyTrigger: result.buyTrigger,
-    sellTrigger: result.sellTrigger,
-    cooldownMs: cooldownMs,
-    maxDailyTrades: maxDailyTrades
-  });
-
-  var status = String(PropertiesService.getScriptProperties().getProperty('STATUS_BOT_ETH') || 'KOSONG').toUpperCase();
-
-  Logger.log('✅ Trigger otomatis disesuaikan berdasarkan harga market.');
-  Logger.log('Pair: ' + pair + ', price: ' + result.currentPrice + ', buyTrigger: ' + result.buyTrigger + ', sellTrigger: ' + result.sellTrigger);
-  Logger.log('Status bot saat ini: ' + status + ', cooldownMs: ' + cooldownMs + ', maxDailyTrades: ' + maxDailyTrades);
-
-  return {
-    pair: pair,
-    currentPrice: result.currentPrice,
-    buyTrigger: result.buyTrigger,
-    sellTrigger: result.sellTrigger,
-    buyDropPercent: result.buyDropPercent,
-    sellRisePercent: result.sellRisePercent,
-    cooldownMs: cooldownMs,
-    maxDailyTrades: maxDailyTrades,
-    status: status
-  };
-}
-
 function runAutoSafeCalibration() {
   var props = PropertiesService.getScriptProperties();
   var currentStatus = String(props.getProperty('STATUS_BOT_ETH') || 'KOSONG').toUpperCase();
@@ -95,14 +56,32 @@ function runAutoSafeCalibration() {
     };
   }
 
-  var result = updateSafeTriggersFromCurrentPrice({
-    pair: 'ethidr',
-    buyDropPercent: 2,
-    sellRisePercent: 5,
+  var pair = 'ethidr';
+  var currentPrice = getTickerPrice(pair);
+  var result = calculateSafeTriggersFromPrice(currentPrice, 2, 5);
+
+  setBotConfigManual({
+    pair: pair,
+    buyTrigger: result.buyTrigger,
+    sellTrigger: result.sellTrigger,
     cooldownMs: 1800000,
     maxDailyTrades: 1
   });
 
-  result.skipped = false;
-  return result;
+  Logger.log('✅ Trigger otomatis disesuaikan berdasarkan harga market.');
+  Logger.log('Pair: ' + pair + ', price: ' + result.currentPrice + ', buyTrigger: ' + result.buyTrigger + ', sellTrigger: ' + result.sellTrigger);
+  Logger.log('Status bot saat ini: ' + currentStatus + ', cooldownMs: 1800000, maxDailyTrades: 1');
+
+  return {
+    pair: pair,
+    currentPrice: result.currentPrice,
+    buyTrigger: result.buyTrigger,
+    sellTrigger: result.sellTrigger,
+    buyDropPercent: result.buyDropPercent,
+    sellRisePercent: result.sellRisePercent,
+    cooldownMs: 1800000,
+    maxDailyTrades: 1,
+    status: currentStatus,
+    skipped: false
+  };
 }
