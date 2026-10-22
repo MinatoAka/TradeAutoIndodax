@@ -43,16 +43,20 @@ function safeParseJson(responseText, contextLabel) {
   }
 }
 
+function normalizeSymbol(symbol) {
+  return String(symbol || '').toLowerCase();
+}
+
 function getBotConfig() {
   var props = PropertiesService.getScriptProperties();
-  var pair = (props.getProperty('BOT_PAIR') || 'ethidr').toLowerCase();
-    
+  var pair = normalizeSymbol(props.getProperty('BOT_PAIR') || 'ethidr');
+
   return {
     pair: pair,
     buyTrigger: Number(props.getProperty('BOT_BUY_TRIGGER') || 42000000),
     sellTrigger: Number(props.getProperty('BOT_SELL_TRIGGER') || 43000000),
     modalPerTrade: Number(props.getProperty('BOT_MODAL_PER_TRADE') || 15000),
-    status: props.getProperty('STATUS_BOT_ETH') || 'KOSONG'
+    status: String(props.getProperty('STATUS_BOT_ETH') || 'KOSONG').toUpperCase()
   };
 }
 
@@ -68,10 +72,7 @@ function setBotStatus(status) {
   return normalizedStatus;
 }
 
-// ==========================================
-// 2. FUNGSI EKSEKUTOR (BELI / JUAL)
-// ==========================================
-function kirimOrder(symbol, side, type, price, qty) {
+function requireApiCredentials() {
   var props = PropertiesService.getScriptProperties();
   var apiKey = props.getProperty('INDO_API_KEY');
   var secretKey = props.getProperty('INDO_SECRET_KEY');
@@ -80,7 +81,81 @@ function kirimOrder(symbol, side, type, price, qty) {
     throw new Error('INDO_API_KEY atau INDO_SECRET_KEY belum di-set.');
   }
 
-  var normalizedSymbol = String(symbol || '').toLowerCase();
+  return {
+    apiKey: apiKey,
+    secretKey: secretKey
+  };
+}
+
+// ==========================================
+// 2. FUNGSI EKSEKUTOR (BELI / JUAL)
+// ==========================================
+function getBalanceMap() {
+  var credentials = requireApiCredentials();
+  var params = {
+    timestamp: String(new Date().getTime()),
+    recvWindow: '5000'
+  };
+
+  var queryString = buildQueryString(params);
+  var signature = getIndodaxSignatureV2(queryString, credentials.secretKey);
+
+  var fetchOptions = {
+    method: 'get',
+    headers: {
+      'X-APIKEY': credentials.apiKey,
+      'Sign': signature
+    },
+    muteHttpExceptions: true
+  };
+
+  var response = UrlFetchApp.fetch('https://api.indodax.com/api/v2/balances?' + queryString, fetchOptions);
+  var responseCode = Number(response.getResponseCode());
+  var rawText = response.getContentText();
+
+  if (responseCode >= 400) {
+    throw new Error('Gagal mengambil saldo akun. HTTP ' + responseCode + ' :: ' + rawText);
+  }
+
+  var data = safeParseJson(rawText, 'balances');
+
+  var balances = {};
+
+  if (Array.isArray(data)) {
+    data.forEach(function (item) {
+      var currency = String(item.currency || item.asset || '').toLowerCase();
+      if (currency) {
+        balances[currency] = item;
+      }
+    });
+  } else if (data && typeof data === 'object') {
+    Object.keys(data).forEach(function (key) {
+      var item = data[key];
+      if (item && typeof item === 'object') {
+        balances[String(key).toLowerCase()] = item;
+      }
+    });
+  }
+
+  return balances;
+}
+
+function getAvailableBalance(currency) {
+  var symbol = normalizeSymbol(currency);
+  var balances = getBalanceMap();
+  var entry = balances[symbol] || balances[symbol.toUpperCase()];
+
+  if (!entry) {
+    return 0;
+  }
+
+  var available = Number(entry.available || entry.free || entry.balance || entry.amount || 0);
+  return isFinite(available) ? available : 0;
+}
+
+function kirimOrder(symbol, side, type, price, qty) {
+  var credentials = requireApiCredentials();
+  var normalizedSymbol = normalizeSymbol(symbol);
   var normalizedSide = String(side || '').toUpperCase();
   var normalizedType = String(type || '').toUpperCase();
 
@@ -121,13 +196,13 @@ function kirimOrder(symbol, side, type, price, qty) {
   }
 
   var queryString = buildQueryString(params);
-  var signature = getIndodaxSignatureV2(queryString, secretKey);
+  var signature = getIndodaxSignatureV2(queryString, credentials.secretKey);
 
   var options = {
     method: 'post',
     contentType: 'application/x-www-form-urlencoded',
     headers: {
-      'X-APIKEY': apiKey,
+      'X-APIKEY': credentials.apiKey,
       'Sign': signature
     },
     payload: queryString,
@@ -164,7 +239,7 @@ function kirimOrder(symbol, side, type, price, qty) {
 // 3. OTAK BOT UTAMA (INI YANG DI-TRIGGER)
 // ==========================================
 function getTickerPrice(pair) {
-  var url = 'https://indodax.com/api/ticker/' + String(pair || '').toLowerCase();
+  var url = 'https://indodax.com/api/ticker/' + normalizeSymbol(pair);
   var response = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
   var responseCode = Number(response.getResponseCode());
   var rawText = response.getContentText();
@@ -183,6 +258,25 @@ function getTickerPrice(pair) {
   return hargaSekarang;
 }
 
+function getOrderQtyForBuy(hargaSekarang, modalPerTrade) {
+  var qty = Number((modalPerTrade / hargaSekarang).toFixed(6));
+  return isFinite(qty) && qty > 0 ? qty : 0;
+}
+
+function getOrderQtyForSell(pair, hargaSekarang, modalPerTrade, buyTrigger) {
+  var assetSymbol = normalizeSymbol(pair).replace(/idr$/, '');
+  var assetBalance = getAvailableBalance(assetSymbol);
+
+  if (assetBalance <= 0) {
+    return 0;
+  }
+
+  var qty = Number((modalPerTrade / Math.max(Number(buyTrigger) || hargaSekarang, 1)).toFixed(6));
+  var safeQty = Math.min(assetBalance, qty);
+
+  return isFinite(safeQty) && safeQty > 0 ? safeQty : 0;
+}
+
 function jalankanBotUtama() {
   var config = getBotConfig();
   var props = PropertiesService.getScriptProperties();
@@ -194,8 +288,8 @@ function jalankanBotUtama() {
     if (config.status === 'KOSONG' && hargaSekarang <= config.buyTrigger) {
       Logger.log('🟢 Sinyal BELI terdeteksi! Mencoba eksekusi...');
 
-      var qty = Number((config.modalPerTrade / hargaSekarang).toFixed(6));
-      if (!isFinite(qty) || qty <= 0) {
+      var qty = getOrderQtyForBuy(hargaSekarang, config.modalPerTrade);
+      if (qty <= 0) {
         Logger.log('⚠️ Kuantitas beli invalid, dilewati.');
         return;
       }
@@ -207,10 +301,9 @@ function jalankanBotUtama() {
     } else if (config.status === 'PEGANG' && hargaSekarang >= config.sellTrigger) {
       Logger.log('🔴 Sinyal JUAL terdeteksi! Mencoba eksekusi...');
 
-      // Catatan: untuk produksi, hitung qty dari saldo ETH aktual bukan asumsi.
-      var qtyToSell = Number((config.modalPerTrade / Math.max(config.buyTrigger, 1)).toFixed(6));
-      if (!isFinite(qtyToSell) || qtyToSell <= 0) {
-        Logger.log('⚠️ Kuantitas jual invalid, dilewati.');
+      var qtyToSell = getOrderQtyForSell(config.pair, hargaSekarang, config.modalPerTrade, config.buyTrigger);
+      if (qtyToSell <= 0) {
+        Logger.log('⚠️ Tidak ada saldo aset yang cukup untuk dijual.');
         return;
       }
 
@@ -264,4 +357,15 @@ function setBotConfigManual(config) {
   }
 
   Logger.log('✅ Konfigurasi bot berhasil disimpan.');
+}
+
+function debugBalances() {
+  try {
+    var balances = getBalanceMap();
+    Logger.log('Saldo akun: ' + JSON.stringify(balances));
+    return balances;
+  } catch (e) {
+    Logger.log('Gagal debug saldo: ' + e.toString());
+    return {};
+  }
 }
