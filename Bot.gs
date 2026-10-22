@@ -95,8 +95,9 @@ function hasOpenPositionGuard(config) {
 }
 
 // ==========================================
-// UPDATE: Fungsi Validasi Terima Saldo dari Luar
+// Fungsi Validasi Terima Saldo dari Luar
 // ==========================================
+
 function validateTradeOpportunity(config, idrBalance, assetBalance, side) {
   if (side === 'BUY') {
     if (String(config.status || '').toUpperCase() === 'PEGANG') {
@@ -121,8 +122,9 @@ function validateTradeOpportunity(config, idrBalance, assetBalance, side) {
 }
 
 // ==========================================
-// UPDATE: Hitung Sell Qty Tanpa Nembak API
+// Hitung Sell Qty Tanpa Nembak API
 // ==========================================
+
 function calculateSellQty(assetBalance, hargaSekarang, modalPerTrade, buyTrigger, minQty) {
   if (assetBalance <= 0) return 0;
 
