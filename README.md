@@ -125,11 +125,15 @@ function setConfigManualDenganHelper() {
 Catatan penting:
 - `runAutoSafeCalibration()` hanya aman dipakai saat status bot masih `KOSONG`.
 - Jika bot sedang `PEGANG`, helper akan membatalkan auto calibration agar tidak mengubah target saat posisi aktif.
-- Untuk mengecek konfigurasi yang sedang aktif, panggil `getBotConfig()`:
+- Untuk mengecek konfigurasi yang sedang aktif, panggil `getBotConfig()` atau `debugConfig()`:
 
 ```javascript
-Logger.log(JSON.stringify(getBotConfig(), null, 2));
+function debugConfig() {
+  getBotConfig();
+}
 ```
+
+`getBotConfig()` akan otomatis menampilkan log yang lebih rapi di Apps Script Logger.
 
 ## Jalankan bot
 ```javascript
