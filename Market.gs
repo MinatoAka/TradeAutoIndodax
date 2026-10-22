@@ -67,10 +67,11 @@ function getAvailableBalance(currency) {
 }
 
 // ==========================================
-// FITUR BARU: Ambil Saldo IDR & Aset Sekaligus (1 Request)
+// Ambil Saldo IDR & Aset Sekaligus (1 Request)
 // ==========================================
+
 function getBalancesForTrade(pair) {
-  var balances = getBalanceMap(); // 1 Request API
+  var balances = getBalanceMap();
   var baseAsset = getPairBaseAsset(pair);
   
   var getVal = function(asset) {
@@ -87,13 +88,14 @@ function getBalancesForTrade(pair) {
 }
 
 // ==========================================
-// UPDATE: GET TICKER PRICE DENGAN RETRY & CACHE
+// GET TICKER PRICE DENGAN RETRY & CACHE
 // ==========================================
+
 function getTickerPrice(pair) {
   var cache = CacheService.getScriptCache();
   var cacheKey = 'ticker_' + normalizeSymbol(pair);
   
-  // 1. Cek Cache dulu (Hemat Request! Berlaku 5 menit / 300 detik)
+  // Cek Cache dulu (Hemat Request! Berlaku 5 menit / 300 detik)
   var cachedPrice = cache.get(cacheKey);
   if (cachedPrice) {
     return Number(cachedPrice);
@@ -128,7 +130,7 @@ function getTickerPrice(pair) {
         throw new Error('Harga ticker tidak valid: ' + rawText);
       }
 
-      // 2. Simpan ke Cache selama 5 menit jika sukses
+      // Simpan ke Cache selama 5 menit jika sukses
       cache.put(cacheKey, String(hargaSekarang), 300);
       return hargaSekarang;
 
