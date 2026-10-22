@@ -72,7 +72,6 @@ function kirimOrder(symbol, side, type, price, qty) {
 }
 
 function hasOpenPositionGuard(config) {
-  // ... (Fungsi guard lo udah sempurna) ...
   var cfg = config || getBotConfig();
   var currentStatus = String(cfg.status || 'KOSONG').toUpperCase();
   var state = getTradeState();
