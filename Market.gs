@@ -67,13 +67,41 @@ function getAvailableBalance(currency) {
 }
 
 // ==========================================
-// UPDATE: GET TICKER PRICE DENGAN RETRY LOGIC
+// FITUR BARU: Ambil Saldo IDR & Aset Sekaligus (1 Request)
 // ==========================================
+function getBalancesForTrade(pair) {
+  var balances = getBalanceMap(); // 1 Request API
+  var baseAsset = getPairBaseAsset(pair);
+  
+  var getVal = function(asset) {
+    var entry = balances[asset] || balances[asset.toUpperCase()];
+    if (!entry) return 0;
+    var val = Number(entry.available || entry.free || entry.balance || entry.amount || 0);
+    return isFinite(val) ? val : 0;
+  };
 
+  return {
+    idr: getVal('idr'),
+    asset: getVal(baseAsset)
+  };
+}
+
+// ==========================================
+// UPDATE: GET TICKER PRICE DENGAN RETRY & CACHE
+// ==========================================
 function getTickerPrice(pair) {
+  var cache = CacheService.getScriptCache();
+  var cacheKey = 'ticker_' + normalizeSymbol(pair);
+  
+  // 1. Cek Cache dulu (Hemat Request! Berlaku 5 menit / 300 detik)
+  var cachedPrice = cache.get(cacheKey);
+  if (cachedPrice) {
+    return Number(cachedPrice);
+  }
+
   var url = 'https://indodax.com/api/ticker/' + normalizeSymbol(pair);
   var maxRetries = 3;
-  var delayMs = 2000; // Mulai jeda dari 2 detik
+  var delayMs = 2000;
 
   for (var attempt = 1; attempt <= maxRetries; attempt++) {
     try {
@@ -81,11 +109,11 @@ function getTickerPrice(pair) {
       var responseCode = Number(response.getResponseCode());
       var rawText = response.getContentText();
 
-      // Jika kena Rate Limit (429), tunggu dan coba lagi
+      // Jika kena Rate Limit (429)
       if (responseCode === 429) {
         Logger.log('⚠️ Kena Rate Limit (429). Menunggu ' + (delayMs / 1000) + ' detik sebelum mencoba lagi (Percobaan ' + attempt + '/' + maxRetries + ')...');
         Utilities.sleep(delayMs);
-        delayMs *= 2; // Exponential backoff: 2s -> 4s -> 8s
+        delayMs *= 2;
         continue; 
       }
 
@@ -100,7 +128,9 @@ function getTickerPrice(pair) {
         throw new Error('Harga ticker tidak valid: ' + rawText);
       }
 
-      return hargaSekarang; // Sukses! Keluar dari loop.
+      // 2. Simpan ke Cache selama 5 menit jika sukses
+      cache.put(cacheKey, String(hargaSekarang), 300);
+      return hargaSekarang;
 
     } catch (e) {
       if (attempt === maxRetries) {
