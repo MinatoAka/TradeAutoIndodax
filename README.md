@@ -1,5 +1,11 @@
 # TradeAutoIndodax
 
+[![GitHub repo stars](https://img.shields.io/github/stars/MinatoAka/TradeAutoIndodax?style=social)](https://github.com/MinatoAka/TradeAutoIndodax/stargazers)
+[![Issues](https://img.shields.io/github/issues/MinatoAka/TradeAutoIndodax)](https://github.com/MinatoAka/TradeAutoIndodax/issues)
+[![License](https://img.shields.io/github/license/MinatoAka/TradeAutoIndodax)](LICENSE)
+[![JavaScript](https://img.shields.io/badge/Language-JavaScript-F7DF1E?logo=javascript&logoColor=black)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
+[![Saweria](https://img.shields.io/badge/Support%20Me-Saweria-FF5C8A?logo=buy-me-a-coffee&logoColor=white)](https://saweria.co/AKaAturDompet)
+
 Bot trading otomatis untuk market Indodax yang dijalankan melalui Google Apps Script.
 
 Project ini dirancang untuk mode yang lebih aman dan konservatif: satu posisi saja, cooldown 30 menit, maksimal 1 trade per hari, dan trigger yang dihitung otomatis berdasarkan harga pasar saat ini.
@@ -46,8 +52,8 @@ Artinya:
 2. `runAutoSafeCalibration()` menghitung trigger aman
 3. Trigger disimpan ke properti bot
 4. `jalankanBotUtama()` mengecek kondisi:
-   - beli saat KOSONG dan harga <= buyTrigger
-   - jual saat PEGANG dan harga >= sellTrigger
+    - beli saat KOSONG dan harga <= buyTrigger
+    - jual saat PEGANG dan harga >= sellTrigger
 5. Setelah trade sukses, status bot diubah antara KOSONG dan PEGANG
 6. Cooldown dan limit harian mencegah overtrading
 
@@ -114,19 +120,27 @@ Nilai default saat ini:
 
 1. Salin project ini ke Google Apps Script
 2. Pastikan semua fungsi pendukung tersedia di project, seperti:
-   - `requireApiCredentials()`
-   - `normalizeSymbol()`
-   - `getTickerPrice()`
-   - `getAvailableBalance()`
-   - `getPairBaseAsset()`
-   - `calculateBuyQty()`
-   - `calculateSellQty()`
-   - `getIndodaxSignatureV2()`
-   - `buildQueryString()`
-   - `safeParseJson()`
+    - `requireApiCredentials()`
+    - `normalizeSymbol()`
+    - `getTickerPrice()`
+    - `getAvailableBalance()`
+    - `getPairBaseAsset()`
+    - `calculateBuyQty()`
+    - `calculateSellQty()`
+    - `getIndodaxSignatureV2()`
+    - `buildQueryString()`
+    - `safeParseJson()`
 3. Isi API key dan secret key Indodax di fungsi `requireApiCredentials()`
 4. Jalankan `runAutoSafeCalibration()` untuk mengisi trigger awal
 5. Jalankan `createBotTrigger30Minutes()` untuk aktifkan scheduler
+
+## Dukungan & Donasi
+
+Jika Anda ingin mendukung pengembangan project ini, silakan dukung melalui Saweria:
+
+[![Saweria](https://img.shields.io/badge/Donate%20via-Saweria-FF5C8A?logo=coffee&logoColor=white)](https://saweria.co/AKaAturDompet)
+
+https://saweria.co/AKaAturDompet
 
 ## Peringatan penting
 
@@ -138,7 +152,7 @@ Nilai default saat ini:
 
 ## Catatan teknis
 
-Project ini menggunakan Google Apps Script dan memanfaatkan Script Properties untuk menyimpan state lokal bot. Karena trigger Apps Script tidak tersimpan di GitHub repo itu sendiri, trigger harus dibuat langsung pada project Apps Script yang sedang dibuka di Google Apps Script.
+Project ini menggunakan Google Apps Script dan memanfaatkan Script Properties untuk menyimpan state lokal bot. Karena trigger Apps Script tidak tersimpan di GitHub repo itu sendiri, trigger harus dibuat ulang di Apps Script atau melalui pemanggilan manual saat proses dibutuhkan.
 
 ## Quick start
 
