@@ -47,6 +47,14 @@ function normalizeSymbol(symbol) {
   return String(symbol || '').toLowerCase();
 }
 
+function getPairBaseAsset(pair) {
+  var normalized = normalizeSymbol(pair);
+  if (normalized.indexOf('idr') !== -1) {
+    return normalized.replace(/idr$/, '');
+  }
+  return normalized;
+}
+
 function getBotConfig() {
   var props = PropertiesService.getScriptProperties();
   var pair = normalizeSymbol(props.getProperty('BOT_PAIR') || 'ethidr');
@@ -56,6 +64,9 @@ function getBotConfig() {
     buyTrigger: Number(props.getProperty('BOT_BUY_TRIGGER') || 42000000),
     sellTrigger: Number(props.getProperty('BOT_SELL_TRIGGER') || 43000000),
     modalPerTrade: Number(props.getProperty('BOT_MODAL_PER_TRADE') || 15000),
+    minQty: Number(props.getProperty('BOT_MIN_QTY') || 0.000001),
+    cooldownMs: Number(props.getProperty('BOT_COOLDOWN_MS') || 60000),
+    maxDailyTrades: Number(props.getProperty('BOT_MAX_DAILY_TRADES') || 6),
     status: String(props.getProperty('STATUS_BOT_ETH') || 'KOSONG').toUpperCase()
   };
 }
@@ -85,6 +96,98 @@ function requireApiCredentials() {
     apiKey: apiKey,
     secretKey: secretKey
   };
+}
+
+function getTradeState() {
+  var props = PropertiesService.getScriptProperties();
+  var raw = props.getProperty('BOT_TRADE_STATE') || '{}';
+
+  try {
+    var parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') {
+      return { dailyTrades: 0, lastTradeAt: 0, lastTradeDate: '' };
+    }
+    return {
+      dailyTrades: Number(parsed.dailyTrades || 0),
+      lastTradeAt: Number(parsed.lastTradeAt || 0),
+      lastTradeDate: String(parsed.lastTradeDate || '')
+    };
+  } catch (e) {
+    return { dailyTrades: 0, lastTradeAt: 0, lastTradeDate: '' };
+  }
+}
+
+function saveTradeState(state) {
+  PropertiesService.getScriptProperties().setProperty('BOT_TRADE_STATE', JSON.stringify(state));
+}
+
+function resetDailyTradeCounterIfNeeded() {
+  var state = getTradeState();
+  var now = new Date();
+  var today = now.getFullYear() + '-' + (now.getMonth() + 1) + '-' + now.getDate();
+
+  if (state.lastTradeDate !== today) {
+    state.dailyTrades = 0;
+    state.lastTradeDate = today;
+    saveTradeState(state);
+  }
+}
+
+function canExecuteNewTrade(config, state) {
+  if (!state) {
+    state = getTradeState();
+  }
+
+  var now = Date.now();
+  var elapsed = now - Number(state.lastTradeAt || 0);
+
+  if (elapsed < Number(config.cooldownMs || 60000)) {
+    Logger.log('⏳ Cooldown aktif. Sisa: ' + (Number(config.cooldownMs || 60000) - elapsed) + ' ms');
+    return false;
+  }
+
+  resetDailyTradeCounterIfNeeded();
+  state = getTradeState();
+
+  if (Number(state.dailyTrades || 0) >= Number(config.maxDailyTrades || 6)) {
+    Logger.log('⚠️ Batas harian trade tercapai: ' + state.dailyTrades + '/' + config.maxDailyTrades);
+    return false;
+  }
+
+  return true;
+}
+
+function registerTradeExecution() {
+  var state = getTradeState();
+  var now = new Date();
+  var today = now.getFullYear() + '-' + (now.getMonth() + 1) + '-' + now.getDate();
+
+  state.lastTradeAt = Date.now();
+  state.lastTradeDate = today;
+  state.dailyTrades = Number(state.dailyTrades || 0) + 1;
+  saveTradeState(state);
+}
+
+function appendTradeLog(entry) {
+  var props = PropertiesService.getScriptProperties();
+  var raw = props.getProperty('BOT_TRADE_LOG') || '[]';
+
+  try {
+    var log = JSON.parse(raw);
+    if (!Array.isArray(log)) {
+      log = [];
+    }
+  } catch (e) {
+    log = [];
+  }
+
+  log.push(entry);
+
+  if (log.length > 50) {
+    log = log.slice(log.length - 50);
+  }
+
+  props.setProperty('BOT_TRADE_LOG', JSON.stringify(log));
 }
 
 // ==========================================
@@ -118,7 +221,6 @@ function getBalanceMap() {
   }
 
   var data = safeParseJson(rawText, 'balances');
-
   var balances = {};
 
   if (Array.isArray(data)) {
@@ -221,7 +323,6 @@ function kirimOrder(symbol, side, type, price, qty) {
     }
 
     var orderId = resData && (resData.orderId || (resData.result && resData.result.orderId));
-
     if (orderId) {
       Logger.log('✅ Order ' + normalizedSide + ' berhasil! ID: ' + orderId);
       return true;
@@ -258,23 +359,62 @@ function getTickerPrice(pair) {
   return hargaSekarang;
 }
 
-function getOrderQtyForBuy(hargaSekarang, modalPerTrade) {
+function calculateBuyQty(hargaSekarang, modalPerTrade, minQty) {
   var qty = Number((modalPerTrade / hargaSekarang).toFixed(6));
-  return isFinite(qty) && qty > 0 ? qty : 0;
+  if (!isFinite(qty) || qty <= 0) {
+    return 0;
+  }
+  if (qty < Number(minQty || 0.000001)) {
+    return 0;
+  }
+  return qty;
 }
 
-function getOrderQtyForSell(pair, hargaSekarang, modalPerTrade, buyTrigger) {
-  var assetSymbol = normalizeSymbol(pair).replace(/idr$/, '');
-  var assetBalance = getAvailableBalance(assetSymbol);
+function calculateSellQty(pair, hargaSekarang, modalPerTrade, buyTrigger, minQty) {
+  var baseAsset = getPairBaseAsset(pair);
+  var assetBalance = getAvailableBalance(baseAsset);
 
   if (assetBalance <= 0) {
     return 0;
   }
 
-  var qty = Number((modalPerTrade / Math.max(Number(buyTrigger) || hargaSekarang, 1)).toFixed(6));
-  var safeQty = Math.min(assetBalance, qty);
+  var nominalTarget = Number(modalPerTrade || 0);
+  var derivedQty = Number((nominalTarget / Math.max(Number(buyTrigger) || hargaSekarang, 1)).toFixed(6));
+  var safeQty = Math.min(assetBalance, derivedQty);
 
-  return isFinite(safeQty) && safeQty > 0 ? safeQty : 0;
+  if (!isFinite(safeQty) || safeQty <= 0) {
+    return 0;
+  }
+
+  if (safeQty < Number(minQty || 0.000001)) {
+    return 0;
+  }
+
+  return safeQty;
+}
+
+function validateTradeOpportunity(config, hargaSekarang, side) {
+  var props = PropertiesService.getScriptProperties();
+  var idrBalance = getAvailableBalance('idr');
+  var assetBalance = getAvailableBalance(getPairBaseAsset(config.pair));
+
+  if (side === 'BUY') {
+    if (idrBalance < config.modalPerTrade) {
+      Logger.log('⚠️ Saldo IDR tidak cukup: ' + idrBalance + ' < ' + config.modalPerTrade);
+      return false;
+    }
+    return true;
+  }
+
+  if (side === 'SELL') {
+    if (assetBalance <= 0) {
+      Logger.log('⚠️ Saldo aset tidak cukup untuk sell.');
+      return false;
+    }
+    return true;
+  }
+
+  return true;
 }
 
 function jalankanBotUtama() {
@@ -283,12 +423,21 @@ function jalankanBotUtama() {
 
   try {
     var hargaSekarang = getTickerPrice(config.pair);
+    var state = getTradeState();
     Logger.log('Harga ' + config.pair.toUpperCase() + ': Rp ' + hargaSekarang.toLocaleString('id-ID') + ' | Status: ' + config.status);
 
     if (config.status === 'KOSONG' && hargaSekarang <= config.buyTrigger) {
-      Logger.log('🟢 Sinyal BELI terdeteksi! Mencoba eksekusi...');
+      Logger.log('🟢 Sinyal BELI terdeteksi! Mengecek kelayakan...');
 
-      var qty = getOrderQtyForBuy(hargaSekarang, config.modalPerTrade);
+      if (!validateTradeOpportunity(config, hargaSekarang, 'BUY')) {
+        return;
+      }
+
+      if (!canExecuteNewTrade(config, state)) {
+        return;
+      }
+
+      var qty = calculateBuyQty(hargaSekarang, config.modalPerTrade, config.minQty);
       if (qty <= 0) {
         Logger.log('⚠️ Kuantitas beli invalid, dilewati.');
         return;
@@ -297,11 +446,28 @@ function jalankanBotUtama() {
       var sukses = kirimOrder(config.pair, 'BUY', 'LIMIT', hargaSekarang, qty);
       if (sukses) {
         setBotStatus('PEGANG');
+        registerTradeExecution();
+        appendTradeLog({
+          timestamp: new Date().toISOString(),
+          type: 'BUY',
+          pair: config.pair,
+          price: hargaSekarang,
+          qty: qty,
+          status: 'PEGANG'
+        });
       }
     } else if (config.status === 'PEGANG' && hargaSekarang >= config.sellTrigger) {
-      Logger.log('🔴 Sinyal JUAL terdeteksi! Mencoba eksekusi...');
+      Logger.log('🔴 Sinyal JUAL terdeteksi! Mengecek saldo aset...');
 
-      var qtyToSell = getOrderQtyForSell(config.pair, hargaSekarang, config.modalPerTrade, config.buyTrigger);
+      if (!validateTradeOpportunity(config, hargaSekarang, 'SELL')) {
+        return;
+      }
+
+      if (!canExecuteNewTrade(config, state)) {
+        return;
+      }
+
+      var qtyToSell = calculateSellQty(config.pair, hargaSekarang, config.modalPerTrade, config.buyTrigger, config.minQty);
       if (qtyToSell <= 0) {
         Logger.log('⚠️ Tidak ada saldo aset yang cukup untuk dijual.');
         return;
@@ -310,6 +476,15 @@ function jalankanBotUtama() {
       var sukses = kirimOrder(config.pair, 'SELL', 'LIMIT', hargaSekarang, qtyToSell);
       if (sukses) {
         setBotStatus('KOSONG');
+        registerTradeExecution();
+        appendTradeLog({
+          timestamp: new Date().toISOString(),
+          type: 'SELL',
+          pair: config.pair,
+          price: hargaSekarang,
+          qty: qtyToSell,
+          status: 'KOSONG'
+        });
       }
     } else {
       Logger.log('🟡 Menunggu momen yang pas... (Harga belum nyentuh target)');
@@ -327,6 +502,7 @@ function resetStatusBot() {
   var props = PropertiesService.getScriptProperties();
   props.deleteProperty('STATUS_BOT_ETH');
   props.deleteProperty('BOT_LAST_ERROR');
+  props.deleteProperty('BOT_TRADE_STATE');
   Logger.log('🔄 Status bot berhasil di-reset ke KOSONG.');
 }
 
@@ -356,6 +532,18 @@ function setBotConfigManual(config) {
     props.setProperty('BOT_MODAL_PER_TRADE', String(Number(config.modalPerTrade)));
   }
 
+  if (config.minQty !== undefined && config.minQty !== null) {
+    props.setProperty('BOT_MIN_QTY', String(Number(config.minQty)));
+  }
+
+  if (config.cooldownMs !== undefined && config.cooldownMs !== null) {
+    props.setProperty('BOT_COOLDOWN_MS', String(Number(config.cooldownMs)));
+  }
+
+  if (config.maxDailyTrades !== undefined && config.maxDailyTrades !== null) {
+    props.setProperty('BOT_MAX_DAILY_TRADES', String(Number(config.maxDailyTrades)));
+  }
+
   Logger.log('✅ Konfigurasi bot berhasil disimpan.');
 }
 
@@ -367,5 +555,20 @@ function debugBalances() {
   } catch (e) {
     Logger.log('Gagal debug saldo: ' + e.toString());
     return {};
+  }
+}
+
+function debugBotState() {
+  var state = getTradeState();
+  Logger.log('BOT_TRADE_STATE: ' + JSON.stringify(state));
+  return state;
+}
+
+function getTradeLog() {
+  var raw = PropertiesService.getScriptProperties().getProperty('BOT_TRADE_LOG') || '[]';
+  try {
+    return JSON.parse(raw);
+  } catch (e) {
+    return [];
   }
 }
