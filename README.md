@@ -9,7 +9,7 @@
 Bot trading otomatis untuk market Indodax yang dijalankan melalui Google Apps Script.
 
 > Disclaimer penting:
-> Panduan ini hanya untuk keperluan edukasi dan pengaturan bot di Google Apps Script. Repo ini bukan saran investasi atau jaminan profit. API key dan secret key adalah kredensial sensitif; jangan di-share ke publik.
+> Panduan ini hanya untuk keperluan edukasi dan pengaturan bot di Google Apps Script. Repo ini bukan saran investasi atau jaminan profit. API key dan secret key adalah kredensial sensitif; jangan dibagikan ke siapapun.
 
 ## Fitur utama
 - Trading otomatis pada pair ETH/IDR atau pair lain yang Anda atur
@@ -78,7 +78,7 @@ function setConfigAwal() {
 ```
 
 ## Konfigurasi manual yang tidak di-set otomatis oleh helper
-`runAutoSafeCalibration()` hanya otomatis mengisi trigger `BOT_BUY_TRIGGER` dan `BOT_SELL_TRIGGER` berdasarkan harga pasar saat ini. Helper ini tidak sekaligus mengatur setting lain yang sering dibutuhkan untuk menjalankan bot secara stabil, seperti:
+`runAutoSafeCalibration()` hanya otomatis mengisi trigger `BOT_BUY_TRIGGER` dan `BOT_SELL_TRIGGER` berdasarkan harga pasar saat ini. Helper ini tidak sekaligus mengatur setting lain yang sering diubah manual, seperti:
 
 - `BOT_PAIR`
 - `BOT_MODAL_PER_TRADE`
@@ -125,12 +125,10 @@ function setConfigManualDenganHelper() {
 Catatan penting:
 - `runAutoSafeCalibration()` hanya aman dipakai saat status bot masih `KOSONG`.
 - Jika bot sedang `PEGANG`, helper akan membatalkan auto calibration agar tidak mengubah target saat posisi aktif.
-- Untuk mengecek konfigurasi yang sedang aktif:
+- Untuk mengecek konfigurasi yang sedang aktif, panggil `getBotConfig()`:
 
 ```javascript
-function debugConfig() {
-  Logger.log(JSON.stringify(getBotConfig(), null, 2));
-}
+Logger.log(JSON.stringify(getBotConfig(), null, 2));
 ```
 
 ## Jalankan bot
