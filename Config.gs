@@ -18,10 +18,27 @@ function getBotConfig() {
     status: String(props.getProperty('STATUS_BOT_ETH') || 'KOSONG').toUpperCase()
   };
 
-  Logger.log('=== getBotConfig ===');
-  Logger.log(JSON.stringify(config, null, 2));
-
+  logBotConfig(config);
   return config;
+}
+
+function debugConfig() {
+  getBotConfig();
+}
+
+function logBotConfig(config) {
+  Logger.log('========================================');
+  Logger.log('||       BOT CONFIG DEBUG             ||');
+  Logger.log('========================================');
+  Logger.log('pair            : ' + config.pair);
+  Logger.log('buyTrigger      : ' + config.buyTrigger);
+  Logger.log('sellTrigger     : ' + config.sellTrigger);
+  Logger.log('modalPerTrade   : ' + config.modalPerTrade);
+  Logger.log('minQty          : ' + config.minQty);
+  Logger.log('cooldownMs      : ' + config.cooldownMs);
+  Logger.log('maxDailyTrades  : ' + config.maxDailyTrades);
+  Logger.log('status          : ' + config.status);
+  Logger.log('========================================');
 }
 
 function setBotStatus(status) {
