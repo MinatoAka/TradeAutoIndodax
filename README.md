@@ -1,5 +1,11 @@
 # TradeAutoIndodax
 
+[![GitHub repo stars](https://img.shields.io/github/stars/MinatoAka/TradeAutoIndodax?style=social)](https://github.com/MinatoAka/TradeAutoIndodax/stargazers)
+[![Issues](https://img.shields.io/github/issues/MinatoAka/TradeAutoIndodax)](https://github.com/MinatoAka/TradeAutoIndodax/issues)
+[![License](https://img.shields.io/github/license/MinatoAka/TradeAutoIndodax)](LICENSE)
+[![JavaScript](https://img.shields.io/badge/Language-JavaScript-F7DF1E?logo=javascript&logoColor=black)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
+[![Saweria](https://img.shields.io/badge/Support%20Me-Saweria-FF5C8A?logo=buy-me-a-coffee&logoColor=white)](https://saweria.co/AKaAturDompet)
+
 Bot trading otomatis untuk market Indodax yang dijalankan melalui Google Apps Script.
 
 > Disclaimer penting:
@@ -76,6 +82,13 @@ function setConfigAwal() {
 runAutoSafeCalibration();
 createBotTrigger30Minutes();
 ```
+
+## Dukungan & Donasi
+Jika Anda ingin mendukung pengembangan project ini, silakan dukung melalui Saweria:
+
+[![Saweria](https://img.shields.io/badge/Donate%20via-Saweria-FF5C8A?logo=coffee&logoColor=white)](https://saweria.co/AKaAturDompet)
+
+https://saweria.co/AKaAturDompet
 
 ## Peringatan
 - Repo ini bukan saran investasi
