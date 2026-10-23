@@ -172,7 +172,3 @@ https://saweria.co/AKaAturDompet
 - Trading crypto berisiko tinggi
 - Gunakan akun yang Anda pahami risikonya
 - Lakukan testing dengan nominal kecil terlebih dahulu
-
-## Lisensi
-
-Lihat file `LICENSE` untuk informasi lisensi.
