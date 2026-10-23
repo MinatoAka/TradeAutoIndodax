@@ -15,7 +15,7 @@ function getBotConfig() {
     minQty: Number(props.getProperty('BOT_MIN_QTY') || 0.000001),
     cooldownMs: Number(props.getProperty('BOT_COOLDOWN_MS') || 1800000),
     maxDailyTrades: Number(props.getProperty('BOT_MAX_DAILY_TRADES') || 2),
-    status: String(props.getProperty('STATUS_BOT_ETH') || 'KOSONG').toUpperCase()
+    status: String(props.getProperty('BOT_STATUS') || 'KOSONG').toUpperCase()
   };
 
   logBotConfig(config);
@@ -49,7 +49,7 @@ function setBotStatus(status) {
     throw new Error('Status bot tidak valid: ' + status);
   }
 
-  props.setProperty('STATUS_BOT_ETH', normalizedStatus);
+  props.setProperty('BOT_STATUS', normalizedStatus);
   return normalizedStatus;
 }
 
@@ -93,7 +93,7 @@ function setBotConfigManual(config) {
 
 function resetStatusBot() {
   var props = PropertiesService.getScriptProperties();
-  props.deleteProperty('STATUS_BOT_ETH');
+  props.deleteProperty('BOT_STATUS');
   props.deleteProperty('BOT_LAST_ERROR');
   props.deleteProperty('BOT_TRADE_STATE');
   props.deleteProperty('BOT_TRADE_LOG');
