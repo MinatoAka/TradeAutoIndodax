@@ -56,7 +56,7 @@ function canExecuteNewTrade(config, state) {
   resetDailyTradeCounterIfNeeded();
   state = getTradeState();
 
-  if (Number(state.dailyTrades || 0) >= Number(config.maxDailyTrades || 6)) {
+  if (Number(state.dailyTrades || 0) >= Number(config.maxDailyTrades || 2)) {
     Logger.log('⚠️ Batas harian trade tercapai: ' + state.dailyTrades + '/' + config.maxDailyTrades);
     return false;
   }
