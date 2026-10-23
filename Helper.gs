@@ -43,7 +43,7 @@ function setSafeTradingDefaults(options) {
 
 function runAutoSafeCalibration() {
   var props = PropertiesService.getScriptProperties();
-  var currentStatus = String(props.getProperty('STATUS_BOT_ETH') || 'KOSONG').toUpperCase();
+  var currentStatus = String(props.getProperty('BOT_STATUS') || 'KOSONG').toUpperCase();
 
   Logger.log('📝 Menjalankan auto calibration. Status bot saat ini: ' + currentStatus);
 
