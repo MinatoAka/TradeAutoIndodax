@@ -156,25 +156,19 @@ function calculateBuyQty(hargaSekarang, modalPerTrade, minQty) {
   return qty;
 }
 
-function calculateSellQty(pair, hargaSekarang, modalPerTrade, buyTrigger, minQty) {
-  var baseAsset = getPairBaseAsset(pair);
-  var assetBalance = getAvailableBalance(baseAsset);
+// ==========================================
+// Hitung Sell Qty Tanpa Nembak API
+// ==========================================
 
-  if (assetBalance <= 0) {
-    return 0;
-  }
+function calculateSellQty(assetBalance, hargaSekarang, modalPerTrade, buyTrigger, minQty) {
+  if (assetBalance <= 0) return 0;
 
   var nominalTarget = Number(modalPerTrade || 0);
   var derivedQty = Number((nominalTarget / Math.max(Number(buyTrigger) || hargaSekarang, 1)).toFixed(6));
   var safeQty = Math.min(assetBalance, derivedQty);
 
-  if (!isFinite(safeQty) || safeQty <= 0) {
-    return 0;
-  }
-
-  if (safeQty < Number(minQty || 0.000001)) {
-    return 0;
-  }
+  if (!isFinite(safeQty) || safeQty <= 0) return 0;
+  if (safeQty < Number(minQty || 0.000001)) return 0;
 
   return safeQty;
 }
