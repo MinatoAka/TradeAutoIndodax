@@ -151,7 +151,7 @@ function jalankanBotUtama() {
     var isSellSignal = (config.status === 'PEGANG' && hargaSekarang >= config.sellTrigger);
 
     if (!isBuySignal && !isSellSignal) {
-      Logger.log('🟡 Menunggu momen yang pas... (Hemat API)');
+      Logger.log('🟡 Menunggu momen yang pas...');
       return; 
     }
 
