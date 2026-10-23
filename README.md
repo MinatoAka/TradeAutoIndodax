@@ -17,7 +17,7 @@ Repositori ini dirancang untuk membantu Anda menjalankan strategi trading sederh
 - Trading otomatis pada pair ETH/IDR atau pair lain yang Anda tentukan
 - Mode single-position
 - Cooldown 30 menit antar trade
-- Maksimal 1 trade per hari
+- Maksimal 2 trade per hari
 - Trigger beli/jual otomatis berdasarkan harga pasar
 - Penyimpanan status dan log di Script Properties
 - Konfigurasi manual maupun otomatis dengan helper function
