@@ -1,5 +1,5 @@
 // ==========================================
-// Helper.gs
+// Helper.gs (Audited & Dynamic)
 // Fungsi bantu untuk strategi aman dan pengaturan trigger otomatis
 // ==========================================
 
@@ -32,20 +32,28 @@ function setSafeTradingDefaults(options) {
   var opts = options || {};
   var props = PropertiesService.getScriptProperties();
 
-  props.setProperty('BOT_BUY_TRIGGER', String(Number(opts.buyTrigger || 42500000)));
-  props.setProperty('BOT_SELL_TRIGGER', String(Number(opts.sellTrigger || 44500000)));
-  props.setProperty('BOT_COOLDOWN_MS', String(Number(opts.cooldownMs || 1800000)));
-  props.setProperty('BOT_MAX_DAILY_TRADES', String(Number(opts.maxDailyTrades || 2)));
+  var currentConfig = getBotConfig(true);
 
-  Logger.log('✅ Default aman tersimpan: buy=' + (opts.buyTrigger || 42500000) + ', sell=' + (opts.sellTrigger || 44500000) + ', cooldown=' + (opts.cooldownMs || 1800000) + ', maxDailyTrades=' + (opts.maxDailyTrades || 2));
+  var buyTrigger = String(Number(opts.buyTrigger || currentConfig.buyTrigger));
+  var sellTrigger = String(Number(opts.sellTrigger || currentConfig.sellTrigger));
+  var cooldownMs = String(Number(opts.cooldownMs || currentConfig.cooldownMs));
+  var maxDailyTrades = String(Number(opts.maxDailyTrades || currentConfig.maxDailyTrades));
+
+  props.setProperty('BOT_BUY_TRIGGER', buyTrigger);
+  props.setProperty('BOT_SELL_TRIGGER', sellTrigger);
+  props.setProperty('BOT_COOLDOWN_MS', cooldownMs);
+  props.setProperty('BOT_MAX_DAILY_TRADES', maxDailyTrades);
+
+  Logger.log('✅ Default aman tersimpan: buy=' + buyTrigger + ', sell=' + sellTrigger + ', cooldown=' + cooldownMs + ', maxDailyTrades=' + maxDailyTrades);
   return true;
 }
 
 function runAutoSafeCalibration() {
-  var props = PropertiesService.getScriptProperties();
-  var currentStatus = String(props.getProperty('BOT_STATUS') || 'KOSONG').toUpperCase();
+  var config = getBotConfig(true);
+  var currentStatus = config.status;
+  var pair = config.pair;
 
-  Logger.log('📝 Menjalankan auto calibration. Status bot saat ini: ' + currentStatus);
+  Logger.log('📝 Menjalankan auto calibration untuk pair [' + pair.toUpperCase() + ']. Status bot saat ini: ' + currentStatus);
 
   if (currentStatus === 'PEGANG') {
     Logger.log('🛡️ Bot masih dalam posisi terbuka. Auto calibration dibatalkan agar tidak mengubah target saat posisi aktif.');
@@ -56,10 +64,11 @@ function runAutoSafeCalibration() {
     };
   }
 
-  var pair = 'ethidr';
+  // Mengambil harga pasar riil berdasarkan pair aktif
   var currentPrice = getTickerPrice(pair);
   var result = calculateSafeTriggersFromPrice(currentPrice, 2, 5);
 
+  // Simpan konfigurasi baru via Helper Config
   setBotConfigManual({
     pair: pair,
     buyTrigger: result.buyTrigger,
