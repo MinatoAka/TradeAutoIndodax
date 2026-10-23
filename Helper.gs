@@ -35,9 +35,9 @@ function setSafeTradingDefaults(options) {
   props.setProperty('BOT_BUY_TRIGGER', String(Number(opts.buyTrigger || 42500000)));
   props.setProperty('BOT_SELL_TRIGGER', String(Number(opts.sellTrigger || 44500000)));
   props.setProperty('BOT_COOLDOWN_MS', String(Number(opts.cooldownMs || 1800000)));
-  props.setProperty('BOT_MAX_DAILY_TRADES', String(Number(opts.maxDailyTrades || 1)));
+  props.setProperty('BOT_MAX_DAILY_TRADES', String(Number(opts.maxDailyTrades || 2)));
 
-  Logger.log('✅ Default aman tersimpan: buy=' + (opts.buyTrigger || 42500000) + ', sell=' + (opts.sellTrigger || 44500000) + ', cooldown=' + (opts.cooldownMs || 1800000) + ', maxDailyTrades=' + (opts.maxDailyTrades || 1));
+  Logger.log('✅ Default aman tersimpan: buy=' + (opts.buyTrigger || 42500000) + ', sell=' + (opts.sellTrigger || 44500000) + ', cooldown=' + (opts.cooldownMs || 1800000) + ', maxDailyTrades=' + (opts.maxDailyTrades || 2));
   return true;
 }
 
@@ -65,12 +65,12 @@ function runAutoSafeCalibration() {
     buyTrigger: result.buyTrigger,
     sellTrigger: result.sellTrigger,
     cooldownMs: 1800000,
-    maxDailyTrades: 1
+    maxDailyTrades: 2
   });
 
   Logger.log('✅ Trigger otomatis disesuaikan berdasarkan harga market.');
   Logger.log('Pair: ' + pair + ', price: ' + result.currentPrice + ', buyTrigger: ' + result.buyTrigger + ', sellTrigger: ' + result.sellTrigger);
-  Logger.log('Status bot saat ini: ' + currentStatus + ', cooldownMs: 1800000, maxDailyTrades: 1');
+  Logger.log('Status bot saat ini: ' + currentStatus + ', cooldownMs: 1800000, maxDailyTrades: 2');
 
   return {
     pair: pair,
@@ -80,7 +80,7 @@ function runAutoSafeCalibration() {
     buyDropPercent: result.buyDropPercent,
     sellRisePercent: result.sellRisePercent,
     cooldownMs: 1800000,
-    maxDailyTrades: 1,
+    maxDailyTrades: 2,
     status: currentStatus,
     skipped: false
   };
