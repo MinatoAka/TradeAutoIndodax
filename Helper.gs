@@ -74,7 +74,7 @@ function runAutoSafeCalibration() {
     buyTrigger: result.buyTrigger,
     sellTrigger: result.sellTrigger,
     cooldownMs: 1800000,
-    maxDailyTrades: 2
+    maxDailyTrades: 6
   });
 
   Logger.log('✅ Trigger otomatis disesuaikan berdasarkan harga market.');
@@ -89,7 +89,7 @@ function runAutoSafeCalibration() {
     buyDropPercent: result.buyDropPercent,
     sellRisePercent: result.sellRisePercent,
     cooldownMs: 1800000,
-    maxDailyTrades: 2,
+    maxDailyTrades: 6,
     status: currentStatus,
     skipped: false
   };
