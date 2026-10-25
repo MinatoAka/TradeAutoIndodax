@@ -18,12 +18,13 @@ function getBalanceMap() {
     method: 'get',
     headers: {
       'X-APIKEY': credentials.apiKey,
-      'Sign': signature
+      'Sign': signature,
+      'Accept': 'application/json'
     },
     muteHttpExceptions: true
   };
 
-  var response = UrlFetchApp.fetch('https://api.indodax.com/api/v2/balances?' + queryString, options);
+  var response = UrlFetchApp.fetch('https://api.indodax.com/api/v2/account?' + queryString, options);
   var responseCode = Number(response.getResponseCode());
   var rawText = response.getContentText();
 
@@ -31,21 +32,18 @@ function getBalanceMap() {
     throw new Error('Gagal mengambil saldo akun. HTTP ' + responseCode + ' :: ' + rawText);
   }
 
-  var data = safeParseJson(rawText, 'balances');
+  var data = safeParseJson(rawText, 'account');
   var balances = {};
 
-  if (Array.isArray(data)) {
-    data.forEach(function (item) {
-      var currency = String(item.currency || item.asset || '').toLowerCase();
+  if (data && Array.isArray(data.balances)) {
+    data.balances.forEach(function (item) {
+      var currency = String(item.asset || '').toLowerCase();
       if (currency) {
-        balances[currency] = item;
-      }
-    });
-  } else if (data && typeof data === 'object') {
-    Object.keys(data).forEach(function (key) {
-      var item = data[key];
-      if (item && typeof item === 'object') {
-        balances[String(key).toLowerCase()] = item;
+        balances[currency] = {
+          free: Number(item.free || 0),
+          locked: Number(item.locked || 0),
+          total: Number(item.free || 0) + Number(item.locked || 0)
+        };
       }
     });
   }
