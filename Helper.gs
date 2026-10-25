@@ -17,7 +17,7 @@ function calculateSafeTriggersFromPrice(currentPrice, buyDropPercent, sellRisePe
   }
 
   var buyTrigger = price * (1 - (buyPercent / 100));
-  var sellTrigger = price * (1 + (sellPercent / 100));
+  var sellTrigger = buyTrigger * (1 + (sellPercent / 100));
 
   return {
     currentPrice: price,
