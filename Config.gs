@@ -14,7 +14,7 @@ function getBotConfig() {
     modalPerTrade: Number(props.getProperty('BOT_MODAL_PER_TRADE') || 15000),
     minQty: Number(props.getProperty('BOT_MIN_QTY') || 0.000001),
     cooldownMs: Number(props.getProperty('BOT_COOLDOWN_MS') || 1800000),
-    maxDailyTrades: Number(props.getProperty('BOT_MAX_DAILY_TRADES') || 6),
+    maxDailyTrades: Number(props.getProperty('BOT_MAX_DAILY_TRADES') || 4),
     status: String(props.getProperty('BOT_STATUS') || 'KOSONG').toUpperCase()
   };
 
