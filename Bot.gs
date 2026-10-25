@@ -103,7 +103,7 @@ function validateTradeOpportunity(config, idrBalance, assetBalance, side) {
       return false;
     }
     if (idrBalance < config.modalPerTrade) {
-      Logger.log('⚠️ Saldo IDR tidak cukup: ' + idrBalance + ' < ' + config.modalPerTrade);
+      Logger.log('⚠️ Saldo IDR tidak cukup: Rp ' + idrBalance.toLocaleString('id-ID') + ' < Rp ' + config.modalPerTrade.toLocaleString('id-ID'));
       return false;
     }
     return true;
@@ -127,7 +127,7 @@ function jalankanBotUtama() {
     // Ambil Harga (Ini udah otomatis pakai CACHE dari update Market.gs)
     var hargaSekarang = getTickerPrice(config.pair);
     
-    Logger.log('📝 Log eksekusi bot: pair=' + config.pair.toUpperCase() + ', harga=' + hargaSekarang + ', status=' + config.status);
+    Logger.log('📝 Log eksekusi bot: pair=' + config.pair.toUpperCase() + ', harga= Rp ' + hargaSekarang.toLocaleString('id-ID') + ', status=' + config.status);
 
     // Cek Sinyal DULU (Early Exit kalau nggak ada sinyal)
     var isBuySignal = (config.status === 'KOSONG' && hargaSekarang <= config.buyTrigger);
