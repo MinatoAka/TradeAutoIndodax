@@ -27,15 +27,20 @@ function debugConfig() {
 }
 
 function logBotConfig(config) {
+  var fBuy = Number(config.buyTrigger).toLocaleString('id-ID');
+  var fSell = Number(config.sellTrigger).toLocaleString('id-ID');
+  var fModal = Number(config.modalPerTrade).toLocaleString('id-ID');
+  var cooldownMenit = Number(config.cooldownMs) / 60000;
+
   Logger.log('========================================');
   Logger.log('||       BOT CONFIG DEBUG             ||');
   Logger.log('========================================');
   Logger.log('pair            : ' + config.pair);
-  Logger.log('buyTrigger      : ' + config.buyTrigger);
-  Logger.log('sellTrigger     : ' + config.sellTrigger);
-  Logger.log('modalPerTrade   : ' + config.modalPerTrade);
+  Logger.log('buyTrigger      : Rp ' + fBuy);
+  Logger.log('sellTrigger     : Rp ' + fSell);
+  Logger.log('modalPerTrade   : Rp ' + fModal);
   Logger.log('minQty          : ' + config.minQty);
-  Logger.log('cooldownMs      : ' + config.cooldownMs);
+  Logger.log('cooldownMs      : ' + cooldownMenit + ' Menit');
   Logger.log('maxDailyTrades  : ' + config.maxDailyTrades);
   Logger.log('status          : ' + config.status);
   Logger.log('========================================');
