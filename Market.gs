@@ -49,7 +49,7 @@ function getBalanceMap() {
   }
 
   var idrSaldo = balances['idr'] ? balances['idr'].free : 0;
-  Logger.log('✅ Saldo IDR: ' + idrSaldo);
+  Logger.log('✅ Saldo IDR: Rp ' + idrSaldo.toLocaleString('id-ID'));
   return balances;
 }
 
