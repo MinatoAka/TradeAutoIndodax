@@ -40,7 +40,7 @@ function logBotConfig(config) {
   Logger.log('sellTrigger     : Rp ' + fSell);
   Logger.log('modalPerTrade   : Rp ' + fModal);
   Logger.log('minQty          : ' + config.minQty);
-  Logger.log('cooldownMs      : ' + cooldownMenit + ' Menit');
+  Logger.log('cooldown.       : ' + cooldownMenit + ' Menit');
   Logger.log('maxDailyTrades  : ' + config.maxDailyTrades);
   Logger.log('status          : ' + config.status);
   Logger.log('========================================');
