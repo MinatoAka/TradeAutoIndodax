@@ -161,7 +161,7 @@ function calculateBuyQty(hargaSekarang, modalPerTrade, minQty) {
   if (!isFinite(qty) || qty <= 0) {
     return 0;
   }
-  if (qty < Number(minQty || 0.000001)) {
+  if (qty < Number(minQty || 0.00001)) {
     return 0;
   }
   return qty;
@@ -179,7 +179,7 @@ function calculateSellQty(assetBalance, hargaSekarang, modalPerTrade, buyTrigger
   var safeQty = Math.min(assetBalance, derivedQty);
 
   if (!isFinite(safeQty) || safeQty <= 0) return 0;
-  if (safeQty < Number(minQty || 0.000001)) return 0;
+  if (safeQty < Number(minQty || 0.00001)) return 0;
 
   return safeQty;
 }
