@@ -127,7 +127,14 @@ function jalankanBotUtama() {
     // Ambil Harga (Ini udah otomatis pakai CACHE dari update Market.gs)
     var hargaSekarang = getTickerPrice(config.pair);
     
-    Logger.log('📝 Log eksekusi bot: pair=' + config.pair.toUpperCase() + ', harga= Rp ' + hargaSekarang.toLocaleString('id-ID') + ', status=' + config.status);
+    // JARING PENGAMAN: Kalau harga kosong, lempar error yang rapi
+    if (hargaSekarang === undefined || hargaSekarang === null || isNaN(hargaSekarang)) {
+      throw new Error('Harga tidak valid atau gagal ditarik dari API.');
+    }
+
+    // Log yang udah aman
+    var fHarga = Number(hargaSekarang).toLocaleString('id-ID');
+    Logger.log('📝 Log eksekusi bot: pair=' + config.pair.toUpperCase() + ', harga= Rp ' + fHarga + ', status=' + config.status);
 
     // Cek Sinyal DULU (Early Exit kalau nggak ada sinyal)
     var isBuySignal = (config.status === 'KOSONG' && hargaSekarang <= config.buyTrigger);
