@@ -114,6 +114,9 @@ function getTickerPrice(pair) {
       // Jika kena Rate Limit (429)
       if (responseCode === 429) {
         Logger.log('⚠️ Kena Rate Limit (429). Menunggu ' + (delayMs / 1000) + ' detik sebelum mencoba lagi (Percobaan ' + attempt + '/' + maxRetries + ')...');
+        if (attempt === maxRetries) {
+          throw new Error('Kena Rate Limit (429) berturut-turut sebanyak ' + maxRetries + ' kali.');
+        }
         Utilities.sleep(delayMs);
         delayMs *= 2;
         continue; 
