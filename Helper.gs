@@ -50,6 +50,8 @@ function runAutoSafeCalibration() {
   // --- SETTINGAN KALIBRASI CONFIG ---
   var buyPercent = 2;         // Target beli turun %
   var sellPercent = 5;        // Target jual naik % dari harga beli
+  var modalPerTrade = 15000;
+  var minQty = 0.00001;
   var cooldownMs = 1800000;   // 30 Menit
   var maxDaily = 4;
 
@@ -60,6 +62,8 @@ function runAutoSafeCalibration() {
     pair: pair,
     buyTrigger: result.buyTrigger,
     sellTrigger: result.sellTrigger,
+    modalPerTrade: modalPerTrade,
+    minQty: minQty,
     cooldownMs: cooldownMs, 
     maxDailyTrades: maxDaily 
   });
