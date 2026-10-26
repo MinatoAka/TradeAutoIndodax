@@ -121,38 +121,60 @@ function getTickerPrice(pair) {
 
       // Jika kena Rate Limit (429)
       if (responseCode === 429) {
-        Logger.log('⚠️ Kena Rate Limit (429). Menunggu ' + (delayMs / 1000) + ' detik sebelum mencoba lagi (Percobaan ' + attempt + '/' + maxRetries + ')...');
+        Logger.log('⚠️ Kena Rate Limit (429). (Percobaan ' + attempt + '/' + maxRetries + ')...');
+  
         if (attempt === maxRetries) {
           throw new Error('Kena Rate Limit (429) berturut-turut sebanyak ' + maxRetries + ' kali.');
         }
-        Utilities.sleep(delayMs);
-        delayMs *= 2;
-        continue; 
-      }
 
-      if (responseCode >= 400 || !rawText) {
-        throw new Error('Gagal mengambil ticker untuk pair ' + pair + '. HTTP: ' + responseCode);
-      }
+        // --- LOGIKA JEDA ACAK (JITTER) ---
+        var jedaDetik = delayMs;
+        if (attempt === 2) {
+          jedaDetik = delayMs + Math.floor(Math.random() * 2500); 
+        }
+  
+        Logger.log('⏳ Menunggu ' + (jedaDetik / 1000).toFixed(2) + ' detik sebelum mencoba lagi...');
+  
+        Utilities.sleep(jedaDetik);
+        delayMs *= 2; // Untuk persiapan percobaan selanjutnya
+        continue;
+     }
 
-      var data = safeParseJson(rawText, 'ticker');
-      var hargaSekarang = parseFloat(data && data.ticker && data.ticker.last);
+     if (responseCode >= 400 || !rawText) {
+       throw new Error('Gagal mengambil ticker untuk pair ' + pair + '. HTTP: ' + responseCode);
+     }
 
-      if (!isFinite(hargaSekarang) || hargaSekarang <= 0) {
-        throw new Error('Harga ticker tidak valid: ' + rawText);
-      }
+     var data = safeParseJson(rawText, 'ticker');
+     var hargaSekarang = parseFloat(data && data.ticker && data.ticker.last);
 
-      // Simpan ke Cache selama 5 menit jika sukses
-      cache.put(cacheKey, String(hargaSekarang), 300);
-      return hargaSekarang;
+     if (!isFinite(hargaSekarang) || hargaSekarang <= 0) {
+       throw new Error('Harga ticker tidak valid: ' + rawText);
+     }
 
-    } catch (e) {
-      if (attempt === maxRetries) {
-        throw new Error('Gagal total setelah ' + maxRetries + ' percobaan. Error: ' + e.message);
-      }
-      Logger.log('❌ Error ambil harga: ' + e.message + '. Mencoba lagi...');
-      Utilities.sleep(delayMs);
-      delayMs *= 2;
-    }
+     // Simpan ke Cache selama 5 menit jika sukses
+     cache.put(cacheKey, String(hargaSekarang), 300);
+     return hargaSekarang;
+
+   } catch (e) {
+     // 1. Kalau udah mentok percobaan terakhir, langsung lempar error total
+     if (attempt === maxRetries) {
+       throw new Error('Gagal total setelah ' + maxRetries + ' percobaan. Error: ' + e.message);
+     }
+
+     // 2. Logika Jeda Acak (Jitter)
+     var jedaDetik = delayMs;
+     if (attempt === 2) {
+       // Kalau percobaan ke-2 (yang tadinya 4 detik), tambahkan acak 0 - 2500 ms
+       jedaDetik = delayMs + Math.floor(Math.random() * 2500); 
+     }
+
+     // 3. Log yang udah manusiawi (nampilin detik dengan 2 angka desimal)
+     Logger.log('❌ Error ambil harga: ' + e.message + '. Menunggu ' + (jedaDetik / 1000).toFixed(2) + ' detik sebelum mencoba lagi...');
+  
+     // 4. Eksekusi jeda dan kalikan delay untuk jaga-jaga
+     Utilities.sleep(jedaDetik);
+     delayMs *= 2;
+   }
   }
 }
 
