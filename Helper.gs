@@ -48,8 +48,8 @@ function runAutoSafeCalibration() {
   var currentPrice = getTickerPrice(pair);
   
   // --- SETTINGAN KALIBRASI CONFIG ---
-  var buyPercent = 2;         // Target beli turun %
-  var sellPercent = 5;        // Target jual naik % dari harga beli
+  var buyPercent = 2.5;         // Target beli turun %
+  var sellPercent = 3.5;        // Target jual naik % dari harga beli
   var modalTrade = 15000;
   var min_Qty = 0.00001;
   var cooldownMs = 1800000;   // 30 Menit
