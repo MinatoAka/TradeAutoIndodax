@@ -3,31 +3,6 @@
 // Fungsi bantu untuk strategi aman dan pengaturan trigger otomatis
 // ==========================================
 
-function calculateSafeTriggersFromPrice(currentPrice, buyDropPercent, sellRisePercent) {
-  if (!isFinite(Number(currentPrice)) || Number(currentPrice) <= 0) {
-    throw new Error('Harga saat ini tidak valid: ' + currentPrice);
-  }
-
-  var price = Number(currentPrice);
-  var buyPercent = Number(buyDropPercent || 2);
-  var sellPercent = Number(sellRisePercent || 5);
-
-  if (buyPercent <= 0 || sellPercent <= 0) {
-    throw new Error('Persentase buy/sell harus lebih besar dari 0.');
-  }
-
-  var buyTrigger = price * (1 - (buyPercent / 100));
-  var sellTrigger = buyTrigger * (1 + (sellPercent / 100));
-
-  return {
-    currentPrice: price,
-    buyTrigger: Math.round(buyTrigger),
-    sellTrigger: Math.round(sellTrigger),
-    buyDropPercent: buyPercent,
-    sellRisePercent: sellPercent
-  };
-}
-
 function runAutoSafeCalibration() {
   var config = getBotConfig(true);
   var currentStatus = config.status;
