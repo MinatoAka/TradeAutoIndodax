@@ -96,3 +96,53 @@ function calculateSafeTriggersFromPrice(currentPrice, buyDropPercent, sellRisePe
     sellRisePercent: sellPercent
   };
 }
+
+function setBotStatus(status) {
+  var props = PropertiesService.getScriptProperties();
+  var normalizedStatus = String(status || '').toUpperCase();
+
+  if (normalizedStatus !== 'KOSONG' && normalizedStatus !== 'PEGANG') {
+    throw new Error('Status bot tidak valid: ' + status);
+  }
+
+  props.setProperty('BOT_STATUS', normalizedStatus);
+  return normalizedStatus;
+}
+
+function setBotConfigManual(config) {
+  if (!config) {
+    throw new Error('Config bot tidak boleh kosong.');
+  }
+
+  var props = PropertiesService.getScriptProperties();
+
+  if (config.pair) {
+    props.setProperty('BOT_PAIR', String(config.pair).toLowerCase());
+  }
+
+  if (config.buyTrigger !== undefined && config.buyTrigger !== null) {
+    props.setProperty('BOT_BUY_TRIGGER', String(Number(config.buyTrigger)));
+  }
+
+  if (config.sellTrigger !== undefined && config.sellTrigger !== null) {
+    props.setProperty('BOT_SELL_TRIGGER', String(Number(config.sellTrigger)));
+  }
+
+  if (config.modalPerTrade !== undefined && config.modalPerTrade !== null) {
+    props.setProperty('BOT_MODAL_PER_TRADE', String(Number(config.modalPerTrade)));
+  }
+
+  if (config.minQty !== undefined && config.minQty !== null) {
+    props.setProperty('BOT_MIN_QTY', String(Number(config.minQty)));
+  }
+
+  if (config.cooldownMs !== undefined && config.cooldownMs !== null) {
+    props.setProperty('BOT_COOLDOWN_MS', String(Number(config.cooldownMs)));
+  }
+
+  if (config.maxDailyTrades !== undefined && config.maxDailyTrades !== null) {
+    props.setProperty('BOT_MAX_DAILY_TRADES', String(Number(config.maxDailyTrades)));
+  }
+
+  Logger.log('✅ Konfigurasi bot berhasil disimpan.');
+}
