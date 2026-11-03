@@ -5,170 +5,104 @@
 [![License](https://img.shields.io/github/license/MinatoAka/TradeAutoIndodax)](LICENSE)
 [![JavaScript](https://img.shields.io/badge/Language-JavaScript-F7DF1E?logo=javascript&logoColor=black)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
 
-Bot trading otomatis untuk market Indodax yang berjalan di Google Apps Script.
+Bot trading otomatis untuk market Indodax yang berjalan di Google Apps Script (GAS). Bot membaca harga ticker, memeriksa saldo saat ada sinyal, lalu mengirim order **LIMIT** sesuai konfigurasi.
 
-Repositori ini dirancang untuk membantu Anda menjalankan strategi trading sederhana dengan trigger otomatis berdasarkan harga pasar, status bot, cooldown, dan batas transaksi harian.
+> **Peringatan:** Dokumentasi ini untuk edukasi dan eksplorasi teknis, bukan saran investasi atau jaminan keuntungan. Trading aset kripto berisiko. Uji dengan nominal kecil dan pahami kode sebelum mengaktifkannya. Jaga API key dan secret key; jangan pernah membagikannya atau menyimpannya di repositori.
 
-> Disclaimer:<br />
-> Dokumentasi ini hanya untuk keperluan edukasi dan eksplorasi teknis. Repo ini bukan saran investasi dan bukan jaminan profit. API key dan secret key adalah kredensial sensitif; jangan dibagikan ke siapapun.
+## Fitur saat ini
 
-## Fitur utama
+- Pair dapat dikonfigurasi melalui Script Properties (default `ethidr`).
+- Sinyal beli saat status `KOSONG` dan harga ticker sama dengan atau di bawah `BOT_BUY_TRIGGER`.
+- Sinyal jual saat status `PEGANG` dan harga ticker sama dengan atau di atas `BOT_SELL_TRIGGER`.
+- Mengirim order LIMIT, memeriksa saldo hanya setelah sinyal terdeteksi, dan menghitung kuantitas berdasarkan nominal trade serta saldo aset.
+- Pengaman status posisi tunggal, cooldown, dan batas jumlah trade harian.
+- Ticker memakai cache 5 menit dan retry saat permintaan gagal/terkena rate limit.
+- Trigger waktu dapat dijalankan setiap 15 atau 30 menit (default 30 menit).
+- Status, state trade, log trade (maksimal 50 entri), dan error terakhir disimpan di Script Properties.
 
-- Trading otomatis pada pair ETH/IDR atau pair lain yang Anda tentukan
-- Mode single-position
-- Cooldown 30 menit antar trade
-- Maksimal 2 trade per hari
-- Trigger beli/jual otomatis berdasarkan harga pasar
-- Penyimpanan status dan log di Script Properties
-- Konfigurasi manual maupun otomatis dengan helper function
+## Cara kerja singkat
 
-## Cara kerja
-
-1. Harga pasar diambil dari ticker Indodax
-2. `runAutoSafeCalibration()` menghitung trigger aman
-3. Trigger disimpan ke Script Properties
-4. Bot mengecek kondisi:
-   - beli saat status `KOSONG` dan harga <= `buyTrigger`
-   - jual saat status `PEGANG` dan harga >= `sellTrigger`
-5. Cooldown dan batas harian mencegah overtrading
+1. `jalankanBotUtama()` membaca konfigurasi dan harga ticker.
+2. Jika tidak ada sinyal beli/jual, bot berhenti tanpa mengambil saldo akun.
+3. Jika ada sinyal, bot mengambil saldo, memeriksa guard/cooldown/batas harian, lalu mengirim order LIMIT.
+4. Setelah order berhasil, status bot diperbarui (`KOSONG` ↔ `PEGANG`) dan state serta log trade disimpan.
 
 ## Persyaratan
 
-- Akun Google dengan akses ke Google Apps Script
-- API Key dan Secret Key Indodax
-- Pair market yang ingin Anda tradingkan
+- Akun Google dan akses ke Google Apps Script.
+- Akun Indodax dan API key/secret key dengan izin yang diperlukan untuk membaca saldo dan melakukan trading. **Jangan aktifkan izin penarikan dana** untuk API key bot.
+- Pair Indodax yang valid.
 
-## Setup API Key Indodax
+## Memasang kode ke Google Apps Script
 
-Simpan credential di Script Properties:
+1. Buat project di [Google Apps Script](https://script.google.com/).
+2. Salin isi file `.gs` dari repositori ke file-file di project GAS: `Bot.gs`, `Config.gs`, `Helper.gs`, `Market.gs`, `TradeState.gs`, `Trigger.gs`, dan `Utils.gs`. Nama file boleh disesuaikan; fungsi-fungsi dalam satu project dapat saling memanggil.
+3. Simpan project, lalu isi Script Properties seperti dijelaskan di bawah.
+4. Jalankan `debugConfig()` untuk memeriksa konfigurasi. Saat diminta, tinjau dan berikan izin yang diperlukan kepada project.
+5. Jalankan `runAutoSafeCalibration()` untuk menghitung trigger otomatis, atau atur trigger beli/jual sendiri.
+6. Setelah konfigurasi dan nominal diperiksa, jalankan `createBotTriggers()` untuk memasang trigger otomatis 30 menit. Alternatif: `createBotTrigger15Minutes()` atau `createBotTrigger30Minutes()`.
 
-```javascript
-function setIndodaxCredentials() {
-  var props = PropertiesService.getScriptProperties();
+Pemanggilan pertama fungsi yang mengakses API atau membuat trigger dapat meminta otorisasi Google. Periksa log eksekusi di editor GAS untuk hasil dan pesan error.
 
-  props.setProperty('INDO_API_KEY', 'PASTE_API_KEY_DISINI');
-  props.setProperty('INDO_SECRET_KEY', 'PASTE_SECRET_KEY_DISINI');
-}
-```
+## Mengisi Script Properties di GAS
 
-Jalankan `setIndodaxCredentials()` sekali untuk menyimpan credential.
+Script Properties adalah penyimpanan konfigurasi untuk seluruh project Apps Script. Cara paling mudah:
 
-Cek apakah credential berhasil dibaca:
+1. Buka project GAS.
+2. Klik **Project Settings** (ikon roda gigi) di panel kiri.
+3. Cari bagian **Script properties**, lalu klik **Add script property**.
+4. Isi **Property** sebagai nama key dan **Value** sebagai nilainya. Tambahkan baris sesuai tabel di bawah, lalu simpan.
+5. Untuk memperbarui nilai, edit property yang bersangkutan. Nilai angka disimpan sebagai teks oleh GAS dan dibaca sebagai angka oleh kode.
 
-```javascript
-function checkApiCredentials() {
-  try {
-    var credentials = requireApiCredentials();
-    Logger.log('API key terdeteksi: ' + credentials.apiKey.substring(0, 8) + '...');
-    Logger.log('Secret key terdeteksi: ' + !!credentials.secretKey);
-  } catch (e) {
-    Logger.log('ERROR: ' + e.message);
-  }
-}
-```
+### Properties yang perlu diisi
 
-## Konfigurasi bot
+| Property | Contoh nilai | Keterangan |
+| --- | --- | --- |
+| `INDO_API_KEY` | `API_KEY_INDOMU` | API key Indodax. Simpan sebagai Script Property, jangan ditulis di file kode. |
+| `INDO_SECRET_KEY` | `SECRET_KEY_INDOMU` | Secret key Indodax. Perlakukan sebagai rahasia. |
 
-Contoh konfigurasi default yang digunakan oleh sistem:
+### Properties konfigurasi bot
 
-```javascript
-function setConfigAwal() {
-  var props = PropertiesService.getScriptProperties();
+Ini adalah nilai awal yang digunakan kode saat property belum diisi. Atur nilainya sesuai pair dan strategi Anda sebelum menjalankan bot.
 
-  props.setProperty('BOT_PAIR', 'ethidr');
-  props.setProperty('BOT_BUY_TRIGGER', '42500000');
-  props.setProperty('BOT_SELL_TRIGGER', '44500000');
-  props.setProperty('BOT_MODAL_PER_TRADE', '15000');
-  props.setProperty('BOT_MIN_QTY', '0.000001');
-  props.setProperty('BOT_COOLDOWN_MS', '1800000');
-  props.setProperty('BOT_MAX_DAILY_TRADES', '1');
-}
-```
+| Property | Default kode | Keterangan |
+| --- | --- | --- |
+| `BOT_PAIR` | `ethidr` | Pair dalam format yang digunakan Indodax, huruf kecil disarankan. |
+| `BOT_BUY_TRIGGER` | `40923000` | Harga beli: sinyal muncul ketika harga sama dengan atau lebih rendah. |
+| `BOT_SELL_TRIGGER` | `42150690` | Harga jual: sinyal muncul ketika harga sama dengan atau lebih tinggi dan status `PEGANG`. |
+| `BOT_MODAL_PER_TRADE` | `15000` | Nominal IDR yang digunakan untuk menghitung jumlah aset per trade. |
+| `BOT_MIN_QTY` | `0.0001` | Kuantitas aset minimum; perhatikan minimum order pair di Indodax. |
+| `BOT_COOLDOWN_MS` | `1800000` | Cooldown dalam milidetik; `1800000` = 30 menit. |
+| `BOT_MAX_DAILY_TRADES` | `6` | Batas trade harian. Satu order beli atau jual yang berhasil dihitung sebagai satu trade. |
+| `BOT_STATUS` | `KOSONG` | Mulai dengan `KOSONG`; status lain yang digunakan adalah `PEGANG`. Status diperbarui setelah order berhasil. |
 
-## Konfigurasi manual
+Contoh isi: masukkan `BOT_PAIR` di kolom **Property** dan `ethidr` di kolom **Value**. Jangan menyalin tanda kutip pada contoh nilai. Jangan masukkan pemisah ribuan pada angka, misalnya gunakan `40923000`, bukan `40.923.000`.
 
-Beberapa parameter dapat diatur secara manual sesuai kebutuhan strategi Anda:
+`BOT_TRADE_STATE`, `BOT_TRADE_LOG`, dan `BOT_LAST_ERROR` adalah property runtime yang dibuat/diperbarui oleh kode; biasanya tidak perlu diisi manual.
 
-```javascript
-function setBotSettingsManual() {
-  var props = PropertiesService.getScriptProperties();
+> Alternatif untuk credential: Anda dapat membuat fungsi setup di editor GAS yang memanggil `PropertiesService.getScriptProperties().setProperty(...)`, lalu menjalankannya satu kali. Jangan commit fungsi yang berisi key/secret asli ke repositori dan hapus nilai sensitif dari kode setelah digunakan. Mengisi melalui Project Settings menghindari penulisan credential di file sumber.
 
-  props.setProperty('BOT_PAIR', 'ethidr');
-  props.setProperty('BOT_BUY_TRIGGER', '42000000');
-  props.setProperty('BOT_SELL_TRIGGER', '45000000');
-  props.setProperty('BOT_MODAL_PER_TRADE', '15000');
-  props.setProperty('BOT_MIN_QTY', '0.000001');
-  props.setProperty('BOT_COOLDOWN_MS', '1800000');
-  props.setProperty('BOT_MAX_DAILY_TRADES', '1');
-  props.setProperty('STATUS_BOT_ETH', 'KOSONG');
-}
-```
+## Kalibrasi otomatis dan konfigurasi manual
 
-Atau gunakan helper yang tersedia di repo:
+`runAutoSafeCalibration()` mengambil harga ticker saat ini dan menghitung trigger berdasarkan harga tersebut. Kode saat ini menggunakan penurunan 2,5% untuk trigger beli dan kenaikan 3% dari trigger beli untuk trigger jual. Fungsi ini juga menetapkan modal trade `15000`, minimum kuantitas `0.00001`, cooldown 30 menit, dan batas 6 trade per hari. Kalibrasi dibatalkan bila status bot `PEGANG`; status pair tidak diganti.
 
-```javascript
-function setConfigManualDenganHelper() {
-  setBotConfigManual({
-    pair: 'ethidr',
-    buyTrigger: 42000000,
-    sellTrigger: 45000000,
-    modalPerTrade: 15000,
-    minQty: 0.000001,
-    cooldownMs: 1800000,
-    maxDailyTrades: 1
-  });
+Untuk kalibrasi, jalankan `runAutoSafeCalibration()` dari editor GAS. Periksa hasil di log eksekusi, lalu tinjau kembali nilai yang tersimpan sebelum mengaktifkan trigger. Kalibrasi otomatis **mengganti** konfigurasi trigger dan beberapa pengaturan trade yang disebutkan di atas.
 
-  setBotStatus('KOSONG');
-}
-```
+Untuk mengubah konfigurasi secara manual, edit Script Properties. Alternatifnya, helper `setBotConfigManual({...})` dapat menyimpan konfigurasi dari fungsi di project; `setBotStatus('KOSONG')` atau `setBotStatus('PEGANG')` mengatur status yang valid.
 
-## Debug dan pengecekan konfigurasi
+## Menjalankan, memeriksa, dan menghentikan bot
 
-Untuk melihat status konfigurasi aktif, gunakan fungsi berikut:
+- `debugConfig()` — menampilkan konfigurasi yang sedang dibaca bot di log.
+- `debugBalances()` — mengambil dan menampilkan saldo akun; gunakan dengan hati-hati.
+- `debugBotState()` — menampilkan state cooldown dan penghitung trade.
+- `jalankanBotUtama()` — menjalankan satu siklus bot secara manual.
+- `createBotTriggers()` — membuat trigger otomatis setiap 30 menit.
+- `createBotTrigger15Minutes()` / `createBotTrigger30Minutes()` — memilih interval yang tersedia. Fungsi ini menghapus trigger `jalankanBotUtama` sebelumnya sebelum membuat yang baru.
+- `deleteBotTriggers()` — menghapus trigger otomatis bot.
+- `resetStatusBot()` — menghapus status, state trade, log, dan error tersimpan sehingga bot kembali ke status default `KOSONG`. Gunakan hanya jika Anda memahami dampaknya dan status akun sesuai.
 
-```javascript
-function debugConfig() {
-  getBotConfig();
-}
-```
-
-Fungsi `getBotConfig()` akan menampilkan log konfigurasi dalam format yang lebih rapi di Apps Script Logger.
-
-## Auto calibration
-
-`runAutoSafeCalibration()` akan menghitung trigger beli dan jual secara otomatis berdasarkan harga pasar saat ini. Fungsi ini aman dipakai ketika bot masih dalam status `KOSONG`.
-
-Jika bot sedang `PEGANG`, fungsi ini akan dibatalkan agar tidak merubah target saat posisi masih aktif.
-
-```javascript
-function runAutoSafeCalibration() {
-  // dipanggil dari Apps Script
-}
-```
-
-## Jalankan bot
-
-```javascript
-runAutoSafeCalibration();
-createBotTrigger30Minutes();
-```
-
-## Catatan penting
-
-- `runAutoSafeCalibration()` hanya aman dipakai saat status bot masih `KOSONG`
-- Jika bot sedang `PEGANG`, auto calibration dibatalkan
-- Gunakan nominal kecil saat melakukan testing awal
-- Pastikan Anda memahami risiko trading crypto sebelum menjalankan bot secara real
+Sebelum mengaktifkan trigger, pastikan API key, pair, trigger harga, nominal, kuantitas minimum, dan status sudah benar. Kode ini mengirim order sungguhan ke akun Indodax ketika kondisi sinyal dan pengaman terpenuhi.
 
 ## Dukungan
 
-Jika Anda ingin mendukung pengembangan project ini, silakan dukung melalui Saweria:
-
-https://saweria.co/AKaAturDompet
-
-## Peringatan
-
-- Repo ini bukan saran investasi
-- Trading crypto berisiko tinggi
-- Gunakan akun yang Anda pahami risikonya
-- Lakukan testing dengan nominal kecil terlebih dahulu
+Jika ingin mendukung pengembangan project ini, silakan melalui Saweria: <https://saweria.co/AKaAturDompet>
