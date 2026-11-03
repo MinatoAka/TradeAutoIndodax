@@ -154,12 +154,6 @@ function getIndodaxPairLimits(targetPair) {
   var cache = CacheService.getScriptCache();
   var cacheKey = 'indodax_limits_' + targetPair.toLowerCase();
   
-  // Cek Cache dulu (Hemat Request API)
-  var cachedData = cache.get(cacheKey);
-  if (cachedData) {
-    return JSON.parse(cachedData);
-  }
-  
   try {
     var options = {
         method: 'get',
