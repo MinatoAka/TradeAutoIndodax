@@ -171,7 +171,6 @@ function getIndodaxPairLimits(targetPair) {
         },
         muteHttpExceptions: true
     };
-    
     var response = UrlFetchApp.fetch('https://indodax.com/api/pairs', options);
     
     if (response.getResponseCode() === 200) {
@@ -188,12 +187,9 @@ function getIndodaxPairLimits(targetPair) {
         var result = {
           // Buffer IDR 5.000 biar nggak mepet pas order
           minBase: rawMinBase + 5000,
-          // Rem 5% dari minQty asli Indodax (Sesuai instruksi Jenderal)
-          minTraded: Number((rawMinTraded * 0.95).toFixed(8)) 
+          // Rem 10% dari minQty asli Indodax (Sesuai instruksi Jenderal)
+          minTraded: Number((rawMinTraded * 0.90).toFixed(8)) 
         };
-        
-        // Simpan ke cache 6 jam (21600 detik)
-        cache.put(cacheKey, JSON.stringify(result), 21600); 
         return result;
       }
     }
