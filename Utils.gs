@@ -161,7 +161,18 @@ function getIndodaxPairLimits(targetPair) {
   }
   
   try {
-    var response = UrlFetchApp.fetch('https://indodax.com/api/pairs', { muteHttpExceptions: true });
+    var options = {
+        method: 'get',
+        headers: {
+          'User-Agent': 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Googlebot/2.1; +http://www.google.com/bot.html) Chrome/154.0.0.0 Safari/537.36',
+          'Accept': 'application/json, application/xml',
+          'Accept-Language': 'en-US, en;q=0.9',
+          'Accept-Encoding': 'gzip, deflate'
+        },
+        muteHttpExceptions: true
+    };
+    
+    var response = UrlFetchApp.fetch('https://indodax.com/api/pairs', options);
     
     if (response.getResponseCode() === 200) {
       var allPairs = JSON.parse(response.getContentText());
