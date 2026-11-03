@@ -146,3 +146,50 @@ function setBotConfigManual(config) {
 
   Logger.log('✅ Konfigurasi bot berhasil disimpan.');
 }
+
+// ==========================================
+// API Fetcher: Ambil Batasan Trade dari Indodax
+// ==========================================
+function getIndodaxPairLimits(targetPair) {
+  var cache = CacheService.getScriptCache();
+  var cacheKey = 'indodax_limits_' + targetPair.toLowerCase();
+  
+  // Cek Cache dulu (Hemat Request API)
+  var cachedData = cache.get(cacheKey);
+  if (cachedData) {
+    return JSON.parse(cachedData);
+  }
+  
+  try {
+    var response = UrlFetchApp.fetch('https://indodax.com/api/pairs', { muteHttpExceptions: true });
+    
+    if (response.getResponseCode() === 200) {
+      var allPairs = JSON.parse(response.getContentText());
+      
+      var foundPair = allPairs.find(function(p) {
+        return p.id === targetPair.toLowerCase();
+      });
+      
+      if (foundPair) {
+        var rawMinBase = Number(foundPair.trade_min_base_currency);
+        var rawMinTraded = Number(foundPair.trade_min_traded_currency);
+        
+        var result = {
+          // Buffer IDR 5.000 biar nggak mepet pas order
+          minBase: rawMinBase + 5000,
+          // Rem 5% dari minQty asli Indodax (Sesuai instruksi Jenderal)
+          minTraded: Number((rawMinTraded * 0.95).toFixed(8)) 
+        };
+        
+        // Simpan ke cache 6 jam (21600 detik)
+        cache.put(cacheKey, JSON.stringify(result), 21600); 
+        return result;
+      }
+    }
+  } catch (e) {
+    Logger.log('❌ Gagal narik API pairs: ' + e.message);
+  }
+  
+  // Fallback darurat kalau API down
+  return { minBase: 15000, minTraded: 0.0001 };
+}
