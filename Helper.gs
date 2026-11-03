@@ -23,13 +23,19 @@ function runAutoSafeCalibration() {
   var currentPrice = getTickerPrice(pair);
   
   // --- SETTINGAN KALIBRASI CONFIG ---
-  var buyPercent = 2.5;         // Target beli turun %
-  var sellPercent = 3;        // Target jual naik % dari harga beli
-  var modalTrade = 15000;
-  var min_Qty = 0.00001;
+  var buyPercent = 2.5;         
+  var sellPercent = 3;        
   var cooldownMs = 1800000;   // 30 Menit
   var maxDaily = 6;
 
+  // 🟢 TARIK BATASAN DARI API INDODAX SECARA DINAMIS
+  var limits = getIndodaxPairLimits(pair);
+  
+  // 🟢 GUNAKAN HASILNYA (Bukan hardcode lagi)
+  var modalTrade = limits.minBase;    // Dapet Buffer + 5000
+  var min_Qty = limits.minTraded;     // Dapet Rem - 10%
+
+  // Hitung trigger harga
   var result = calculateSafeTriggersFromPrice(currentPrice, buyPercent, sellPercent);
 
   // Simpan konfigurasi baru via Helper Config
@@ -57,6 +63,11 @@ function runAutoSafeCalibration() {
   Logger.log('Harga Pasar   : Rp ' + fPrice);
   Logger.log('Buy Trigger   : Rp ' + fBuy + ' (Turun ' + buyPercent + '%)');
   Logger.log('Sell Trigger  : Rp ' + fSell + ' (Naik ' + sellPercent + '% dari harga beli)');
+  
+  // 🟢 TAMBAHAN LOG BIAR LO TAU BATASANNYA BERUBAH ATAU ENGGAK
+  Logger.log('Modal Trade   : Rp ' + modalTrade.toLocaleString('id-ID'));
+  Logger.log('Min Qty Rem   : ' + min_Qty);
+  
   Logger.log('Cooldown      : ' + cooldownMenit + ' Menit'); 
   Logger.log('Max Daily     : ' + maxDaily + ' kali');
   Logger.log('Status Bot    : ' + currentStatus);
