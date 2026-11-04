@@ -120,32 +120,32 @@ function validateTradeOpportunity(config, idrBalance, assetBalance, side) {
 }
 
 function jalankanBotUtama() {
+  // 🛡️ REM 1: LOCK SERVICE (Mencegah trigger berjalan ganda di detik yang sama)
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(10000)) {
+    Logger.log('⏳ [LOCK] Bot sedang berjalan di eksekusi lain. Skip iterasi ini.');
+    return;
+  }
+
   var config = getBotConfig();
   var props = PropertiesService.getScriptProperties();
 
   try {
-    // Ambil Harga (Ini udah otomatis pakai CACHE dari update Market.gs)
     var hargaSekarang = getTickerPrice(config.pair);
-    
-    // JARING PENGAMAN: Kalau harga kosong, lempar error yang rapi
     if (hargaSekarang === undefined || hargaSekarang === null || isNaN(hargaSekarang)) {
       throw new Error('Harga tidak valid atau gagal ditarik dari API.');
     }
 
-    // Log yang udah aman
     var fHarga = Number(hargaSekarang).toLocaleString('id-ID');
     Logger.log('📝 Log eksekusi bot: pair=' + config.pair.toUpperCase() + ', harga= Rp ' + fHarga + ', status=' + config.status);
 
-    // Cek Sinyal DULU (Early Exit kalau nggak ada sinyal)
     var isBuySignal = (config.status === 'KOSONG' && hargaSekarang <= config.buyTrigger);
     var isSellSignal = (config.status === 'PEGANG' && hargaSekarang >= config.sellTrigger);
-
     if (!isBuySignal && !isSellSignal) {
       Logger.log('🟡 Sabar bos kita tunggu momen yang pas...');
       return; 
     }
 
-    // KALAU ADA SINYAL, BARU TARIK SALDO (1 Request doang!)
     Logger.log('🔔 Sinyal terdeteksi! Mengecek saldo & guard...');
     var saldo = getBalancesForTrade(config.pair); 
     var state = getTradeState();
@@ -153,9 +153,7 @@ function jalankanBotUtama() {
     // --- EKSEKUSI BELI ---
     if (isBuySignal) {
       if (!hasOpenPositionGuard(config)) return;
-      // Cek validasi
       if (!validateTradeOpportunity(config, saldo.idr, saldo.asset, 'BUY')) {
-        // 🚨 CIRCUIT BREAKER: Matikan bot jika saldo IDR tidak cukup
         if (saldo.idr < config.modalPerTrade) {
           Logger.log('🛑 [CIRCUIT BREAKER] Saldo IDR tidak cukup. Mematikan trigger bot...');
           props.deleteProperty('BOT_LAST_ERROR');
@@ -169,7 +167,9 @@ function jalankanBotUtama() {
       var qty = calculateBuyQty(hargaSekarang, config.modalPerTrade, config.minQty);
       if (qty <= 0) return;
 
-      var sukses = kirimOrder(config.pair, 'BUY', 'LIMIT', hargaSekarang, qty);
+      // 🛡️ REM 2: GUNAKAN MARKET ORDER (Pasti tereksekusi, tidak menggantung)
+      // Catatan: Untuk MARKET order di Indodax, parameter price diabaikan atau diisi 0.
+      var sukses = kirimOrder(config.pair, 'BUY', 'MARKET', hargaSekarang, qty);
       if (sukses) {
         setBotStatus('PEGANG');
         registerTradeExecution();
@@ -181,9 +181,7 @@ function jalankanBotUtama() {
 
     // --- EKSEKUSI JUAL ---
     if (isSellSignal) {
-      // Cek validasi
       if (!validateTradeOpportunity(config, saldo.idr, saldo.asset, 'SELL')) {
-        // 🚨 CIRCUIT BREAKER: Matikan bot jika status PEGANG tapi saldo aset 0 (Desync)
         if (saldo.asset <= 0) {
           Logger.log('🛑 [CIRCUIT BREAKER] Status PEGANG tapi saldo aset 0. Mereset status dan mematikan trigger...');
           setBotStatus('KOSONG');
@@ -194,11 +192,11 @@ function jalankanBotUtama() {
       
       if (!canExecuteNewTrade(config, state)) return;
 
-      // Panggil calculateSellQty pakai saldo yang udah ditarik di atas
       var qtyToSell = calculateSellQty(saldo.asset, hargaSekarang, config.modalPerTrade, config.buyTrigger, config.minQty);
       if (qtyToSell <= 0) return;
 
-      var sukses = kirimOrder(config.pair, 'SELL', 'LIMIT', hargaSekarang, qtyToSell);
+      // 🛡️ REM 2: GUNAKAN MARKET ORDER
+      var sukses = kirimOrder(config.pair, 'SELL', 'MARKET', hargaSekarang, qtyToSell);
       if (sukses) {
         setBotStatus('KOSONG');
         registerTradeExecution();
@@ -211,5 +209,8 @@ function jalankanBotUtama() {
   } catch (e) {
     Logger.log('Error Sistem di Bot Utama: ' + e.toString());
     props.setProperty('BOT_LAST_ERROR', new Date().toISOString() + ' :: ' + e.toString());
+  } finally {
+    // 🛡️ SELALU LEPAS LOCK, WALAUPUN TERJADI ERROR
+    lock.releaseLock();
   }
 }
