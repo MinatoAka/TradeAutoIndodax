@@ -24,12 +24,13 @@ function kirimOrder(symbol, side, type, price, qty) {
     side: normalizedSide,
     type: normalizedType,
     timestamp: String(new Date().getTime()),
-    recvWindow: '5000'
+    recvWindow: '5000',
+    quantity: String(qtyNumber) // <-- Quantity WAJIB masuk untuk LIMIT maupun MARKET
   };
 
+  // Harga HANYA dikirim jika tipenya LIMIT
   if (normalizedType === 'LIMIT') {
     params.price = String(priceNumber);
-    params.quantity = String(qtyNumber);
   }
 
   var queryString = buildQueryString(params);
