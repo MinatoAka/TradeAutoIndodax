@@ -3,6 +3,15 @@
 // Mengambil saldo, ticker, dan menghitung qty
 // ==========================================
 
+/**
+ * formatQty — Mengubah angka jadi string tanpa notasi ilmiah dan tanpa nol berlebih di belakang.
+ */
+function formatQty(qty) {
+  if (!qty || isNaN(qty)) return "0";
+  var str = Number(qty).toFixed(8);
+  return str.replace(/\.?0+$/, "");
+}
+
 function getBalanceMap() {
   var credentials = requireApiCredentials();
 
@@ -182,29 +191,25 @@ function getTickerPrice(pair) {
 }
 
 function calculateBuyQty(hargaSekarang, modalPerTrade, minQty) {
-  var qty = Number((modalPerTrade / hargaSekarang).toFixed(6));
-  if (!isFinite(qty) || qty <= 0) {
-    return 0;
-  }
-  if (qty < Number(minQty || 0.00001)) {
-    return 0;
-  }
-  return qty;
+  var qty = Number(modalPerTrade / hargaSekarang);
+  var formatted = Number(formatQty(qty));
+  
+  if (!isFinite(formatted) || formatted <= 0) return 0;
+  if (formatted < Number(minQty || 0.00001)) return 0;
+  
+  return formatted;
 }
-
-// ==========================================
-// Hitung Sell Qty Tanpa Nembak API
-// ==========================================
 
 function calculateSellQty(assetBalance, hargaSekarang, modalPerTrade, buyTrigger, minQty) {
   if (assetBalance <= 0) return 0;
 
   var nominalTarget = Number(modalPerTrade || 0);
-  var derivedQty = Number((nominalTarget / Math.max(Number(buyTrigger) || hargaSekarang, 1)).toFixed(6));
+  var derivedQty = Number(nominalTarget / Math.max(Number(buyTrigger) || hargaSekarang, 1));
   var safeQty = Math.min(assetBalance, derivedQty);
+  var formatted = Number(formatQty(safeQty));
 
-  if (!isFinite(safeQty) || safeQty <= 0) return 0;
-  if (safeQty < Number(minQty || 0.00001)) return 0;
+  if (!isFinite(formatted) || formatted <= 0) return 0;
+  if (formatted < Number(minQty || 0.00001)) return 0;
 
-  return safeQty;
+  return formatted;
 }
