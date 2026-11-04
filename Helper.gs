@@ -32,8 +32,8 @@ function runAutoSafeCalibration() {
   var limits = getIndodaxPairLimits(pair);
   
   // 🟢 GUNAKAN HASILNYA (Bukan hardcode lagi)
-  var modalTrade = limits.minBase;    // Dapet Buffer + 5000
-  var min_Qty = limits.minTraded;     // Dapet Rem - 10%
+  var modalTrade = limits.minBase;
+  var min_Qty = limits.minTraded;
 
   // Hitung trigger harga
   var result = calculateSafeTriggersFromPrice(currentPrice, buyPercent, sellPercent);
