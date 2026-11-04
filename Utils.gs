@@ -181,7 +181,7 @@ function getIndodaxPairLimits(targetPair) {
         var result = {
           // Buffer IDR 5.000 biar nggak mepet pas order
           minBase: rawMinBase + 5000,
-          // Rem 10% dari minQty asli Indodax (Sesuai instruksi Jenderal)
+          // Rem 50% dari minQty asli Indodax (Sesuai instruksi Jenderal)
           minTraded: Number((rawMinTraded * 0.50).toFixed(8)) 
         };
         return result;
