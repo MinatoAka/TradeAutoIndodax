@@ -182,7 +182,7 @@ function getIndodaxPairLimits(targetPair) {
           // Buffer IDR 5.000 biar nggak mepet pas order
           minBase: rawMinBase + 5000,
           // Rem 10% dari minQty asli Indodax (Sesuai instruksi Jenderal)
-          minTraded: Number((rawMinTraded * 0.90).toFixed(8)) 
+          minTraded: Number((rawMinTraded * 0.50).toFixed(8)) 
         };
         return result;
       }
