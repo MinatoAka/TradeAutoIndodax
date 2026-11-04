@@ -27,10 +27,16 @@ function saveTradeState(state) {
   PropertiesService.getScriptProperties().setProperty('BOT_TRADE_STATE', JSON.stringify(state));
 }
 
+function getTradingDate() {
+  var now = new Date();
+  // Kurangi 7 jam dari waktu sekarang agar pergantian hari terjadi jam 07:00 WIB
+  var tradingTime = new Date(now.getTime() - (7 * 60 * 60 * 1000));
+  return Utilities.formatDate(tradingTime, "Asia/Jakarta", "yyyy-MM-dd");
+}
+
 function resetDailyTradeCounterIfNeeded() {
   var state = getTradeState();
-  var now = new Date();
-  var today = now.getFullYear() + '-' + (now.getMonth() + 1) + '-' + now.getDate();
+  var today = getTradingDate();
 
   if (state.lastTradeDate !== today) {
     state.dailyTrades = 0;
@@ -66,8 +72,7 @@ function canExecuteNewTrade(config, state) {
 
 function registerTradeExecution() {
   var state = getTradeState();
-  var now = new Date();
-  var today = now.getFullYear() + '-' + (now.getMonth() + 1) + '-' + now.getDate();
+  var today = getTradingDate(); // Pakai tanggal candle
 
   state.lastTradeAt = Date.now();
   state.lastTradeDate = today;
