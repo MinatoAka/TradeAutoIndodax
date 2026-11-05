@@ -6,10 +6,10 @@ const optHeaders = {
   method: 'get',
   muteHttpExceptions: true,
   followRedirects: true,
-  headers: { 
-    'Accept': 'application/json, application/rss+xml, application/xml, text/xml, */*', 
-    'Accept-Language': 'en-US, en;q=0.9',
-    'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 27_0_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) GSA/434.2.961627397 Mobile/15E148 Safari/604.1'
+  headers: {
+    'Accept': 'application/json, text/plain, */*',
+    'Accept-Language': 'id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7',
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36'
   }
 };
 
