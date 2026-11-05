@@ -42,7 +42,10 @@ function resetDailyTradeCounterIfNeeded() {
     state.dailyTrades = 0;
     state.lastTradeDate = today;
     saveTradeState(state);
+    Logger.log('🔄 Hari trading baru terdeteksi (' + today + '). Counter harian di-reset ke 0.');
   }
+  
+  return state;
 }
 
 function canExecuteNewTrade(config, state) {
@@ -54,14 +57,16 @@ function canExecuteNewTrade(config, state) {
   var elapsed = now - Number(state.lastTradeAt || 0);
   var cooldownMs = Number(config.cooldownMs || 60000);
 
+  // 1. Cek Cooldown
   if (elapsed < cooldownMs) {
     Logger.log('⏳ Cooldown aktif. Sisa: ' + (cooldownMs - elapsed) + ' ms');
     return false;
   }
 
-  resetDailyTradeCounterIfNeeded();
-  state = getTradeState();
+  // 2. Cek & Reset Harian (Langsung timpa variabel 'state' dengan hasil return)
+  state = resetDailyTradeCounterIfNeeded();
 
+  // 3. Cek Batas Harian
   if (Number(state.dailyTrades || 0) >= Number(config.maxDailyTrades || 2)) {
     Logger.log('⚠️ Batas harian trade tercapai: ' + state.dailyTrades + '/' + config.maxDailyTrades);
     return false;
