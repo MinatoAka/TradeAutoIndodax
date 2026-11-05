@@ -2,7 +2,6 @@
 // TradeState.gs
 // State trade, cooldown, logging, debug
 // ==========================================
-
 function getTradeState() {
   var props = PropertiesService.getScriptProperties();
   var raw = props.getProperty('BOT_TRADE_STATE') || '{}';
