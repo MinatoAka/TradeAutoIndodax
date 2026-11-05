@@ -2,7 +2,6 @@
 // Market.gs
 // Mengambil saldo, ticker, dan menghitung qty
 // ==========================================
-
 /**
  * formatQty — Mengubah angka jadi string tanpa notasi ilmiah dan tanpa nol berlebih di belakang.
  */
