@@ -99,7 +99,6 @@ function getBalancesForTrade(pair) {
 // ==========================================
 // GET TICKER PRICE DENGAN RETRY & CACHE
 // ==========================================
-
 function getTickerPrice(pair) {
   var cache = CacheService.getScriptCache();
   var cacheKey = 'ticker_' + normalizeSymbol(pair);
@@ -111,7 +110,7 @@ function getTickerPrice(pair) {
   }
 
   var url = 'https://indodax.com/api/ticker/' + normalizeSymbol(pair);
-  var maxRetries = 3;
+  var maxRetries = 4;
   var delayMs = 2000;
 
   for (var attempt = 1; attempt <= maxRetries; attempt++) {
@@ -119,7 +118,7 @@ function getTickerPrice(pair) {
       var options = {
         method: 'get',
         headers: {
-          'User-Agent': 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Googlebot/2.1; +http://www.google.com/bot.html) Chrome/120.0.0.0 Safari/537.36',
+          'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.96 Mobile Safari/537.36 (compatible; Googlebot/2.1; +https://www.google.com/bot.html)',
           'Accept': 'application/json, application/xml',
           'Accept-Language': 'en-US, en;q=0.9',
           'Accept-Encoding': 'gzip, deflate'
@@ -139,16 +138,14 @@ function getTickerPrice(pair) {
           throw new Error('Kena Rate Limit (429) berturut-turut sebanyak ' + maxRetries + ' kali.');
         }
 
-        // --- LOGIKA JEDA ACAK (JITTER) ---
-        var jedaDetik = delayMs;
-        if (attempt === 2) {
-          jedaDetik = delayMs + Math.floor(Math.random() * 2500); 
-        }
+        // --- LOGIKA JEDA ACAK (JITTER) UNTUK SEMUA RETRY ---
+        // delayMs akan terus membesar (2s, 4s, dst), ditambah waktu acak 0-2500ms
+        var jedaDetik = delayMs + Math.floor(Math.random() * 2500); 
   
         Logger.log('⏳ Menunggu ' + (jedaDetik / 1000).toFixed(2) + ' detik sebelum mencoba lagi...');
   
         Utilities.sleep(jedaDetik);
-        delayMs *= 2; // Untuk persiapan percobaan selanjutnya
+        delayMs *= 2; // Gandakan delay untuk percobaan selanjutnya
         continue;
      }
 
@@ -173,12 +170,8 @@ function getTickerPrice(pair) {
        throw new Error('Gagal total setelah ' + maxRetries + ' percobaan. Error: ' + e.message);
      }
 
-     // 2. Logika Jeda Acak (Jitter)
-     var jedaDetik = delayMs;
-     if (attempt === 2) {
-       // Kalau percobaan ke-2 (yang tadinya 4 detik), tambahkan acak 0 - 2500 ms
-       jedaDetik = delayMs + Math.floor(Math.random() * 2500); 
-     }
+     // 2. Logika Jeda Acak (Jitter) untuk semua retry
+     var jedaDetik = delayMs + Math.floor(Math.random() * 2500); 
 
      // 3. Log yang udah manusiawi (nampilin detik dengan 2 angka desimal)
      Logger.log('❌ Error ambil harga: ' + e.message + '. Menunggu ' + (jedaDetik / 1000).toFixed(2) + ' detik sebelum mencoba lagi...');
