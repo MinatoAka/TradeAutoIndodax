@@ -3,18 +3,56 @@
 // Menyimpan dan membaca konfigurasi bot
 // ==========================================
 
+/**
+ * safeNumber — Membersihkan input string menjadi angka murni.
+ * Menghilangkan titik/koma (misal "15.000" jadi 15000).
+ * Mengembalikan defaultVal jika hasilnya tidak valid.
+ */
+function safeNumber(val, defaultVal) {
+  if (val === null || val === undefined || val === '') return defaultVal;
+  // Hapus semua karakter selain angka, titik desimal, dan minus
+  var cleanVal = String(val).replace(/[^0-9.-]+/g, '');
+  var num = Number(cleanVal);
+  return isFinite(num) && num > 0 ? num : defaultVal;
+}
+
 function getBotConfig() {
   var props = PropertiesService.getScriptProperties();
-  var pair = normalizeSymbol(props.getProperty('BOT_PAIR') || 'ethidr');
 
+  // 🛡️ PENGAMAN 1: Pair WAJIB Di-set
+  var rawPair = props.getProperty('BOT_PAIR');
+  if (!rawPair) {
+    throw new Error('🛑 [CONFIG ERROR] BOT_PAIR wajib di-set di Script Properties!');
+  }
+  var pair = normalizeSymbol(rawPair);
+  if (!pair) {
+    throw new Error('🛑 [CONFIG ERROR] Format BOT_PAIR tidak valid. Contoh: ethidr, btcidr.');
+  }
+
+  // 🛡️ PENGAMAN 2: Trigger Harga WAJIB Di-set
+  var rawBuyTrigger = props.getProperty('BOT_BUY_TRIGGER');
+  var rawSellTrigger = props.getProperty('BOT_SELL_TRIGGER');
+
+  if (!rawBuyTrigger || !rawSellTrigger) {
+    throw new Error('🛑 [CONFIG ERROR] BOT_BUY_TRIGGER dan BOT_SELL_TRIGGER wajib di-set di Script Properties!');
+  }
+
+  var buyTrigger = safeNumber(rawBuyTrigger, 0);
+  var sellTrigger = safeNumber(rawSellTrigger, 0);
+
+  if (buyTrigger <= 0 || sellTrigger <= 0) {
+    throw new Error('🛑 [CONFIG ERROR] Nilai BOT_BUY_TRIGGER atau BOT_SELL_TRIGGER tidak valid (harus berupa angka > 0).');
+  }
+
+  // 🛡️ PENGAMAN 3: Parameter lain dibersihkan dengan safeNumber
   var config = {
     pair: pair,
-    buyTrigger: Number(props.getProperty('BOT_BUY_TRIGGER') || 40923000),
-    sellTrigger: Number(props.getProperty('BOT_SELL_TRIGGER') || 42150690),
-    modalPerTrade: Number(props.getProperty('BOT_MODAL_PER_TRADE') || 15000),
-    minQty: Number(props.getProperty('BOT_MIN_QTY') || 0.0001),
-    cooldownMs: Number(props.getProperty('BOT_COOLDOWN_MS') || 1800000),
-    maxDailyTrades: Number(props.getProperty('BOT_MAX_DAILY_TRADES') || 6),
+    buyTrigger: buyTrigger,
+    sellTrigger: sellTrigger,
+    modalPerTrade: safeNumber(props.getProperty('BOT_MODAL_PER_TRADE'), 15000),
+    minQty: safeNumber(props.getProperty('BOT_MIN_QTY'), 0.0001),
+    cooldownMs: safeNumber(props.getProperty('BOT_COOLDOWN_MS'), 1800000),
+    maxDailyTrades: safeNumber(props.getProperty('BOT_MAX_DAILY_TRADES'), 6),
     status: String(props.getProperty('BOT_STATUS') || 'KOSONG').toUpperCase()
   };
 
