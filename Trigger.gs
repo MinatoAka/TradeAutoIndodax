@@ -2,7 +2,6 @@
 // Trigger.gs
 // Menangani trigger otomatis untuk menjalankan bot utama
 // ==========================================
-
 function createBotTriggers() {
   // Default: 30 menit untuk strategi yang lebih aman.
   return createBotTrigger30Minutes();
@@ -21,13 +20,7 @@ function createBotTriggerEveryMinutes(intervalMinutes) {
     throw new Error('Interval trigger hanya support 15 atau 30 menit.');
   }
 
-  var triggers = ScriptApp.getProjectTriggers();
-  for (var i = 0; i < triggers.length; i++) {
-    var trigger = triggers[i];
-    if (trigger.getHandlerFunction() === 'jalankanBotUtama') {
-      ScriptApp.deleteTrigger(trigger);
-    }
-  }
+  deleteBotTriggers();
 
   ScriptApp.newTrigger('jalankanBotUtama')
     .timeBased()
@@ -40,12 +33,17 @@ function createBotTriggerEveryMinutes(intervalMinutes) {
 
 function deleteBotTriggers() {
   var triggers = ScriptApp.getProjectTriggers();
+  var deleted = 0;
+
   for (var i = 0; i < triggers.length; i++) {
     var trigger = triggers[i];
     if (trigger.getHandlerFunction() === 'jalankanBotUtama') {
       ScriptApp.deleteTrigger(trigger);
+      deleted++;
     }
   }
 
-  Logger.log('🧹 Semua trigger bot utama dihapus.');
+  if (deleted > 0) {
+    Logger.log('🧹 ' + deleted + ' trigger bot utama dihapus.');
+  }
 }
