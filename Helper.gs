@@ -2,7 +2,6 @@
 // Helper.gs (Audited & Dynamic)
 // Fungsi bantu untuk strategi aman dan pengaturan trigger otomatis
 // ==========================================
-
 function runAutoSafeCalibration() {
   var props = PropertiesService.getScriptProperties();
   
