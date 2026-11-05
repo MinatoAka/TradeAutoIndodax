@@ -115,17 +115,7 @@ function getTickerPrice(pair) {
 
   for (var attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      var options = {
-        method: 'get',
-        headers: {
-          'User-Agent': 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Googlebot/2.1; +http://www.google.com/bot.html) Chrome/154.0.0.0 Safari/537.36',
-          'Accept': 'application/json, application/xml',
-          'Accept-Language': 'en-US, en;q=0.9'
-        },
-        muteHttpExceptions: true
-      };
-      
-      var response = UrlFetchApp.fetch(url, options);
+      var response = UrlFetchApp.fetch(url, optHeaders);
       var responseCode = Number(response.getResponseCode());
       var rawText = response.getContentText();
 
