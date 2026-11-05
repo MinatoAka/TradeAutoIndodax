@@ -9,23 +9,22 @@ Bot trading otomatis untuk market Indodax yang berjalan di Google Apps Script (G
 
 > **Peringatan:** Dokumentasi ini untuk edukasi dan eksplorasi teknis, bukan saran investasi atau jaminan keuntungan. Trading aset kripto berisiko. Uji dengan nominal kecil dan pahami kode sebelum mengaktifkannya. Jaga API key dan secret key; jangan pernah membagikannya atau menyimpannya di repositori.
 
-## Fitur saat ini
+## ✨ Fitur
 
-- Pair dapat dikonfigurasi melalui Script Properties (default `ethidr`).
-- Sinyal beli saat status `KOSONG` dan harga ticker sama dengan atau di bawah `BOT_BUY_TRIGGER`.
-- Sinyal jual saat status `PEGANG` dan harga ticker sama dengan atau di atas `BOT_SELL_TRIGGER`.
-- Mengirim order LIMIT, memeriksa saldo hanya setelah sinyal terdeteksi, dan menghitung kuantitas berdasarkan nominal trade serta saldo aset.
-- Pengaman status posisi tunggal, cooldown, dan batas jumlah trade harian.
-- Ticker memakai cache 5 menit dan retry saat permintaan gagal/terkena rate limit.
-- Trigger waktu dapat dijalankan setiap 15 atau 30 menit (default 30 menit).
-- Status, state trade, log trade (maksimal 50 entri), dan error terakhir disimpan di Script Properties.
+- **Market Order Execution:** Mengeksekusi order dengan tipe `MARKET` agar pasti langsung terbeli/terjual tanpa menggantung.
+- **Anti-Bentrok (LockService):** Mencegah bot mengeksekusi order ganda saat trigger berjalan bersamaan.
+- **Circuit Breaker:** Otomatis mematikan bot jika saldo tidak cukup atau terjadi ketidaksesuaian status (desync).
+- **Dynamic Limits:** Menarik batas minimum pembelian (`minQty`) langsung dari API Indodax.
+- **Anti Rate-Limit:** Dilengkapi *retry* otomatis dengan jeda acak jika terkena limit (HTTP 429).
+- **Single-Position:** Hanya membuka satu posisi per waktu untuk mencegah *overtrading*.
 
-## Cara kerja singkat
+## ⚙️ Cara Kerja
 
-1. `jalankanBotUtama()` membaca konfigurasi dan harga ticker.
-2. Jika tidak ada sinyal beli/jual, bot berhenti tanpa mengambil saldo akun.
-3. Jika ada sinyal, bot mengambil saldo, memeriksa guard/cooldown/batas harian, lalu mengirim order LIMIT.
-4. Setelah order berhasil, status bot diperbarui (`KOSONG` ↔ `PEGANG`) dan state serta log trade disimpan.
+1. Bot mengecek harga secara berkala (menggunakan cache untuk menghemat request).
+2. Jika harga menyentuh `BUY_TRIGGER` dan status `KOSONG`, bot akan mengecek saldo lalu mengirim `MARKET BUY`.
+3. Status berubah menjadi `PEGANG`.
+4. Jika harga menyentuh `SELL_TRIGGER` dan status `PEGANG`, bot akan mengirim `MARKET SELL`.
+5. Status kembali menjadi `KOSONG`.
 
 ## Persyaratan
 
