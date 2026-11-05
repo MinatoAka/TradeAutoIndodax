@@ -2,7 +2,16 @@
 // Config.gs
 // Menyimpan dan membaca konfigurasi bot
 // ==========================================
-
+var optHeaders = {
+  method: 'get',
+  followRedirects: true,
+  headers: { 
+    'Accept': 'application/json, application/rss+xml, application/xml, text/xml, */*', 
+    'Accept-Language': 'en-US, en;q=0.9',
+    'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 27_0_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) GSA/434.2.961627397 Mobile/15E148 Safari/604.1'
+  },
+  muteHttpExceptions: true
+};
 /**
  * safeNumber — Membersihkan input string menjadi angka murni.
  * Menghilangkan titik/koma (misal "15.000" jadi 15000).
