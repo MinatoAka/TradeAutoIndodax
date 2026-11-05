@@ -161,17 +161,7 @@ function getIndodaxPairLimits(targetPair) {
   var cacheKey = 'indodax_limits_' + normalizedTarget;
   
   try {
-    var options = {
-        method: 'get',
-        headers: {
-          'User-Agent': 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Googlebot/2.1; +http://www.google.com/bot.html) Chrome/154.0.0.0 Safari/537.36',
-          'Accept': 'application/json, application/xml',
-          'Accept-Language': 'en-US, en;q=0.9'
-        },
-        muteHttpExceptions: true
-    };
-    var response = UrlFetchApp.fetch('https://indodax.com/api/pairs', options);
-    
+    var response = UrlFetchApp.fetch('https://indodax.com/api/pairs', optHeaders);
     if (response.getResponseCode() === 200) {
       var allPairs = JSON.parse(response.getContentText());
       
