@@ -2,7 +2,6 @@
 // Utils.gs
 // Helper umum untuk format & keamanan
 // ==========================================
-
 function getIndodaxSignatureV2(payloadString, secretKey) {
   if (!payloadString || !secretKey) {
     throw new Error('Payload atau secretKey tidak boleh kosong.');
