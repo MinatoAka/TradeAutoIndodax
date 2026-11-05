@@ -4,9 +4,11 @@
 // ==========================================
 
 function runAutoSafeCalibration() {
-  var config = getBotConfig(true);
-  var currentStatus = config.status;
-  var pair = config.pair;
+  var props = PropertiesService.getScriptProperties();
+  
+  // 🛡️ PENGAMAN 1: Ambil Pair dan Status langsung (Tanpa memicu Error Config)
+  var pair = normalizeSymbol(props.getProperty('BOT_PAIR') || 'ethidr');
+  var currentStatus = String(props.getProperty('BOT_STATUS') || 'KOSONG').toUpperCase();
 
   Logger.log('📝 Menjalankan auto calibration untuk pair [' + pair.toUpperCase() + ']. Status bot saat ini: ' + currentStatus);
 
@@ -22,7 +24,7 @@ function runAutoSafeCalibration() {
   // Mengambil harga pasar riil berdasarkan pair aktif
   var currentPrice = getTickerPrice(pair);
   
-  // --- SETTINGAN KALIBRASI CONFIG ---
+  // --- SETTINGAN KALIBRASI CONFIG (HARDCODE PILIHAN JENDERAL) ---
   var buyPercent = 2.5;         
   var sellPercent = 3;        
   var cooldownMs = 1800000;   // 30 Menit
@@ -31,9 +33,9 @@ function runAutoSafeCalibration() {
   // 🟢 TARIK BATASAN DARI API INDODAX SECARA DINAMIS
   var limits = getIndodaxPairLimits(pair);
   
-  // 🟢 GUNAKAN HASILNYA (Bukan hardcode lagi)
-  var modalTrade = limits.minBase;
-  var min_Qty = limits.minTraded;
+  // 🟢 GUNAKAN HASILNYA
+  var modalTrade = limits.minBase;    // Dapet Buffer + 5000
+  var min_Qty = limits.minTraded;     // Dapet Rem 50%
 
   // Hitung trigger harga
   var result = calculateSafeTriggersFromPrice(currentPrice, buyPercent, sellPercent);
