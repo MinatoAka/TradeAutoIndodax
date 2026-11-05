@@ -2,7 +2,7 @@
 // Config.gs
 // Menyimpan dan membaca konfigurasi bot
 // ==========================================
-var optHeaders = {
+const optHeaders = {
   method: 'get',
   followRedirects: true,
   headers: { 
@@ -12,6 +12,7 @@ var optHeaders = {
   },
   muteHttpExceptions: true
 };
+
 /**
  * safeNumber — Membersihkan input string menjadi angka murni.
  * Menghilangkan titik/koma (misal "15.000" jadi 15000).
