@@ -79,8 +79,6 @@ Contoh isi: masukkan `BOT_PAIR` di kolom **Property** dan `ethidr` di kolom **Va
 
 `BOT_TRADE_STATE`, `BOT_TRADE_LOG`, dan `BOT_LAST_ERROR` adalah property runtime yang dibuat/diperbarui oleh kode; biasanya tidak perlu diisi manual.
 
-> Alternatif untuk credential: Anda dapat membuat fungsi setup di editor GAS yang memanggil `PropertiesService.getScriptProperties().setProperty(...)`, lalu menjalankannya satu kali. Jangan commit fungsi yang berisi key/secret asli ke repositori dan hapus nilai sensitif dari kode setelah digunakan. Mengisi melalui Project Settings menghindari penulisan credential di file sumber.
-
 ## Kalibrasi otomatis dan konfigurasi manual
 
 `runAutoSafeCalibration()` mengambil harga ticker saat ini dan menghitung trigger berdasarkan harga tersebut. Kode saat ini menggunakan penurunan 2,5% untuk trigger beli dan kenaikan 3% dari trigger beli untuk trigger jual. Fungsi ini juga menetapkan modal trade `15000`, minimum kuantitas `0.00001`, cooldown 30 menit, dan batas 6 trade per hari. Kalibrasi dibatalkan bila status bot `PEGANG`; status pair tidak diganti.
