@@ -45,8 +45,13 @@ function safeParseJson(responseText, contextLabel) {
   }
 }
 
+/**
+ * normalizeSymbol — Membersihkan input menjadi format standar Indodax (lowercase, tanpa spasi/underscore).
+ * FIX: Disamakan dengan standar normalizePair di ApiService.
+ */
 function normalizeSymbol(symbol) {
-  return String(symbol || '').toLowerCase();
+  if (!symbol) return '';
+  return String(symbol).toLowerCase().replace(/[\/\s\-_]/g, '').trim();
 }
 
 function getPairBaseAsset(pair) {
@@ -86,6 +91,7 @@ function calculateSafeTriggersFromPrice(currentPrice, buyDropPercent, sellRisePe
   }
 
   var buyTrigger = price * (1 - (buyPercent / 100));
+  // FIX: Sell trigger dihitung dari Buy Trigger (Bukan Current Price)
   var sellTrigger = buyTrigger * (1 + (sellPercent / 100));
 
   return {
@@ -117,7 +123,7 @@ function setBotConfigManual(config) {
   var props = PropertiesService.getScriptProperties();
 
   if (config.pair) {
-    props.setProperty('BOT_PAIR', String(config.pair).toLowerCase());
+    props.setProperty('BOT_PAIR', normalizeSymbol(config.pair));
   }
 
   if (config.buyTrigger !== undefined && config.buyTrigger !== null) {
@@ -152,7 +158,8 @@ function setBotConfigManual(config) {
 // ==========================================
 function getIndodaxPairLimits(targetPair) {
   var cache = CacheService.getScriptCache();
-  var cacheKey = 'indodax_limits_' + targetPair.toLowerCase();
+  var normalizedTarget = normalizeSymbol(targetPair);
+  var cacheKey = 'indodax_limits_' + normalizedTarget;
   
   try {
     var options = {
@@ -171,17 +178,22 @@ function getIndodaxPairLimits(targetPair) {
       var allPairs = JSON.parse(response.getContentText());
       
       var foundPair = allPairs.find(function(p) {
-        return p.id === targetPair.toLowerCase();
+        return p.id === normalizedTarget;
       });
       
       if (foundPair) {
         var rawMinBase = Number(foundPair.trade_min_base_currency);
         var rawMinTraded = Number(foundPair.trade_min_traded_currency);
         
+        // FIX: Pengaman kalau API mengembalikan NaN / undefined
+        if (!isFinite(rawMinBase) || !isFinite(rawMinTraded)) {
+          throw new Error('Data limit dari API tidak valid untuk pair ' + normalizedTarget);
+        }
+
         var result = {
           // Buffer IDR 5.000 biar nggak mepet pas order
           minBase: rawMinBase + 5000,
-          // Rem 50% dari minQty asli Indodax (Sesuai instruksi Jenderal)
+          // Rem 50% dari minQty asli Indodax
           minTraded: Number((rawMinTraded * 0.50).toFixed(8)) 
         };
         return result;
@@ -192,5 +204,6 @@ function getIndodaxPairLimits(targetPair) {
   }
   
   // Fallback darurat kalau API down
+  Logger.log('⚠️ Menggunakan fallback limit untuk pair ' + normalizedTarget);
   return { minBase: 15000, minTraded: 0.0001 };
 }
