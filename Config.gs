@@ -13,7 +13,7 @@ function safeNumber(val, defaultVal) {
   // Hapus semua karakter selain angka, titik desimal, dan minus
   var cleanVal = String(val).replace(/[^0-9.-]+/g, '');
   var num = Number(cleanVal);
-  return isFinite(num) && num > 0 ? num : defaultVal;
+  return isFinite(num) && num >= 0 ? num : defaultVal;
 }
 
 function getBotConfig() {
