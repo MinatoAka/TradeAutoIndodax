@@ -2,7 +2,6 @@
 // Bot.gs
 // Logika utama trading dan eksekusi order
 // ==========================================
-
 function kirimOrder(symbol, side, type, price, qty) {
   var credentials = requireApiCredentials();
   var normalizedSymbol = normalizeSymbol(symbol);
@@ -24,13 +23,22 @@ function kirimOrder(symbol, side, type, price, qty) {
     side: normalizedSide,
     type: normalizedType,
     timestamp: String(new Date().getTime()),
-    recvWindow: '5000',
-    quantity: String(qtyNumber) // <-- Quantity WAJIB masuk untuk LIMIT maupun MARKET
+    recvWindow: '5000'
   };
 
-  // Harga HANYA dikirim jika tipenya LIMIT
+  // 🛡️ FIX ERROR -1130: Logika Parameter Berdasarkan Tipe Order
   if (normalizedType === 'LIMIT') {
     params.price = String(priceNumber);
+    params.quantity = String(qtyNumber);
+  } else if (normalizedType === 'MARKET') {
+    if (normalizedSide === 'BUY') {
+      // BUY MARKET butuh quoteOrderQty (Nominal Rupiah)
+      var quoteAmount = qtyNumber * priceNumber;
+      params.quoteOrderQty = String(Math.floor(quoteAmount));
+    } else {
+      // SELL MARKET butuh quantity (Jumlah Koin)
+      params.quantity = String(qtyNumber);
+    }
   }
 
   var queryString = buildQueryString(params);
