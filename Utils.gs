@@ -164,10 +164,8 @@ function getIndodaxPairLimits(targetPair) {
     var options = {
         method: 'get',
         headers: {
-          'User-Agent': 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Googlebot/2.1; +http://www.google.com/bot.html) Chrome/154.0.0.0 Safari/537.36',
-          'Accept': 'application/json, application/xml',
-          'Accept-Language': 'en-US, en;q=0.9',
-          'Accept-Encoding': 'gzip, deflate'
+          'User-Agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Mobile Safari/537.36',
+          'Accept': 'application/json, application/xml'
         },
         muteHttpExceptions: true
     };
