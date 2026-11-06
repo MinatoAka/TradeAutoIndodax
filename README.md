@@ -6,9 +6,31 @@
 [![JavaScript](https://img.shields.io/badge/JavaScript-Google%20Apps%20Script-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)](https://developers.google.com/apps-script)
 [![Dukung via Saweria](https://img.shields.io/badge/Saweria-Dukung%20Project-FF5E5B?style=for-the-badge)](https://saweria.co/AKaAturDompet)
 
-Bot trading otomatis untuk market Indodax yang dijalankan melalui Google Apps Script (GAS). Bot memantau harga ticker, mengecek status posisi, dan mengeksekusi order type `MARKET` bukan `LIMIT` saat sinyal `BUY` atau `SELL` terpenuhi.
+Bot trading otomatis untuk market Indodax yang dijalankan melalui Google Apps Script (GAS). Bot memantau harga ticker, mengecek status posisi, dan mengeksekusi order type `MARKET` bukan `LIMIT` saat momen trading sesuai konfigurasi.
 
-> **Peringatan:** Dokumentasi ini untuk edukasi dan eksplorasi teknis, bukan saran investasi atau jaminan keuntungan. Trading aset kripto berisiko. Uji dengan nominal kecil dan pahami kode sebelum menggunakannya. Bot dapat mengeksekusi order sungguhan pada akun Indodax Anda.
+> **Peringatan:** Dokumentasi ini untuk edukasi dan eksplorasi teknis, bukan saran investasi atau jaminan keuntungan. Trading aset kripto berisiko. Uji dengan nominal kecil dan pahami kode sebelum menjalankan bot dengan saldo nyata.
+
+## 📁 Struktur file project
+
+Repo ini merupakan project Google Apps Script, sehingga seluruh file script diletakkan di root folder project. Struktur file yang benar adalah:
+
+```text
+TradeAutoIndodax/
+├── Bot.gs          # Logika utama bot: pengecekan sinyal, eksekusi beli/jual, lock, validasi
+├── Config.gs       # Konfigurasi bot, script properties, dan parameter default
+├── Helper.gs       # Fungsi helper umum untuk validasi, format, dan operasi pendukung
+├── Market.gs       # Pengambilan data market, harga ticker, dan informasi pair dari Indodax
+├── TradeState.gs   # State posisi, log trade, cooldown, dan status bot
+├── Trigger.gs      # Pembuatan trigger otomatis untuk eksekusi berjadwal di GAS
+├── Utils.gs        # Utility untuk signature, parsing JSON, format data, dan operasi kecil
+├── LICENSE         # Lisensi project
+├── README.md       # Dokumentasi project
+└── .clasp.json     # (Opsional, jika project GAS dikaitkan dengan clasp)
+```
+
+Catatan:
+- Tidak ada folder `src/` atau `app/` pada repo ini karena project berjalan langsung sebagai file `.gs` di Google Apps Script.
+- Jika Anda mengimpor project ke Apps Script, pastikan semua file di atas ada di root project dan bukan di subdirektori yang berbeda.
 
 ## ✨ Fitur utama
 
@@ -45,7 +67,7 @@ Bot trading otomatis untuk market Indodax yang dijalankan melalui Google Apps Sc
 5. Isi `Script Properties` sesuai panduan di bawah.
 6. Jalankan `debugConfig()` untuk memeriksa konfigurasi.
 7. Jalankan `runAutoSafeCalibration()` untuk menghitung trigger otomatis, atau atur trigger secara manual.
-8. Setelah memeriksa konfigurasi dan nominal trade, pilih dan jalankan **satu** fungsi trigger: `createBotTrigger15Minutes()`, `createBotTrigger30Minutes()`, `createBotTrigger1Hour()`, `createBotTrigger2Hours()`, atau `createBotTrigger4Hours()`.
+8. Setelah memeriksa konfigurasi dan nominal trade, pilih dan jalankan satu fungsi trigger: `createBotTrigger15Minutes()`, `createBotTrigger30Minutes()`, `createBotTrigger1Hour()`, `createBotTrigger2Hours()`, atau `createBotTrigger4Hours()`.
 
 > Fungsi trigger akan menghapus trigger `jalankanBotUtama` yang sudah ada sebelum membuat yang baru. Jangan jalankan beberapa fungsi trigger berturut-turut kecuali memang ingin mengganti interval.
 >
@@ -85,7 +107,7 @@ Properti runtime seperti `BOT_TRADE_STATE`, `BOT_TRADE_LOG`, dan `BOT_LAST_ERROR
 
 ## Kalibrasi otomatis dan konfigurasi manual
 
-Fungsi `runAutoSafeCalibration()` mengambil harga ticker saat ini dan menghitung trigger beli/jual. Kode saat ini menggunakan penurunan beli sekitar **2,5%** dari harga saat ini dan kenaikan jual **3%** dari trigger beli. Fungsi ini juga mengambil batas pair dari API Indodax untuk menentukan modal dan kuantitas minimum. Kalibrasi dibatalkan jika status bot `PEGANG`.
+Fungsi `runAutoSafeCalibration()` mengambil harga ticker saat ini dan menghitung trigger beli/jual. Kode saat ini menggunakan penurunan beli sekitar **2,5%** dari harga saat ini dan kenaikan jual sekitar **2,5%** dari harga saat ini sebagai pendekatan awal, lalu menyimpannya ke Script Properties.
 
 Setelah kalibrasi, cek log dan pastikan nilai yang tersimpan masuk akal sebelum mengaktifkan trigger.
 
@@ -109,7 +131,7 @@ Jalankan fungsi berikut dari editor Google Apps Script sesuai kebutuhan:
 ### Menjalankan bot dan mengatur jadwal
 
 - `jalankanBotUtama()` — menjalankan satu siklus bot secara manual.
-- Pilih **satu** fungsi untuk membuat trigger otomatis:
+- Pilih satu fungsi untuk membuat trigger otomatis:
   * `createBotTrigger15Minutes()` bot dijalankan setiap 15 menit,
   * `createBotTrigger30Minutes()` bot dijalankan setiap 30 menit,
   * `createBotTrigger1Hour()` bot dijalankan setiap 1 jam,
