@@ -40,7 +40,7 @@ function createBotTriggerEveryMinutes(intervalMinutes) {
 
 function createBotTriggerEveryHours(intervalHours) {
   if (intervalHours !== 1 && intervalHours !== 2 && intervalHours !== 4) {
-    throw new Error('Interval trigger hanya support 1, 2, dan 4 Jam.');
+    throw new Error('Interval trigger hanya support 1, 2, dan 4 jam.');
   }
 
   deleteBotTriggers();
@@ -50,7 +50,7 @@ function createBotTriggerEveryHours(intervalHours) {
     .everyHours(intervalHours)
     .create();
 
-  Logger.log('✅ Trigger bot dibuat setiap ' + intervalHours + ' menit.');
+  Logger.log('✅ Trigger bot dibuat setiap ' + intervalHours + ' jam.');
   return true;
 }
 
