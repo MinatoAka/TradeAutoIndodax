@@ -5,11 +5,10 @@
 const optHeaders = {
   method: 'get',
   muteHttpExceptions: true,
-  followRedirects: true,
   headers: {
     'Accept': 'application/json, text/plain, */*',
-    'Accept-Language': 'id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7',
-    'User-Agent': 'Mozilla/5.0 (Linux; Android 15; I2216) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Mobile Safari/537.36'
+    'Accept-Language': 'id-ID,id;q=0.9, en-US;q=0.8, en;q=0.7',
+    'User-Agent': 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Googlebot/2.1; +http://www.google.com/bot.html) Chrome/122.0.0.0 Safari/537.36'
   }
 };
 
