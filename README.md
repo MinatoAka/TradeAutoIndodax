@@ -29,8 +29,8 @@ TradeAutoIndodax/
 ```
 
 > Catatan:
-- Tidak ada folder `src/` atau `app/` pada repo ini karena project berjalan langsung sebagai file `.gs` di Google Apps Script.
-- Jika Anda mengimpor project ke Apps Script, pastikan semua file di atas ada di root project dan bukan di subdirektori yang berbeda.
+> - Tidak ada folder `src/` atau `app/` pada repo ini karena project berjalan langsung sebagai file `.gs` di Google Apps Script.
+> - Jika Anda mengimpor project ke Apps Script, pastikan semua file di atas ada di root project dan bukan di subdirektori yang berbeda.
 
 ## ✨ Fitur utama
 
