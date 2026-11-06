@@ -39,6 +39,9 @@ function createBotTriggerEveryMinutes(intervalMinutes) {
 }
 
 function createBotTriggerEveryHours(intervalHours) {
+  if (intervalHours !== 1 && intervalHours !== 2 && intervalHours !== 4) {
+    throw new Error('Interval trigger hanya support 1, 2, dan 4 Jam.');
+  }
 
   deleteBotTriggers();
 
