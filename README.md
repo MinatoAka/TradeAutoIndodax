@@ -6,7 +6,7 @@
 [![JavaScript](https://img.shields.io/badge/JavaScript-Google%20Apps%20Script-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)](https://developers.google.com/apps-script)
 [![Dukung via Saweria](https://img.shields.io/badge/Saweria-Dukung%20Project-FF5E5B?style=for-the-badge)](https://saweria.co/AKaAturDompet)
 
-Bot trading otomatis untuk market Indodax yang dijalankan melalui Google Apps Script (GAS). Bot memantau harga ticker, mengecek status posisi, dan mengeksekusi order `MARKET` saat sinyal beli atau jual terpenuhi.
+Bot trading otomatis untuk market Indodax yang dijalankan melalui Google Apps Script (GAS). Bot memantau harga ticker, mengecek status posisi, dan mengeksekusi order type `MARKET` bukan `LIMIT` saat sinyal `BUY` atau `SELL` terpenuhi.
 
 > **Peringatan:** Dokumentasi ini untuk edukasi dan eksplorasi teknis, bukan saran investasi atau jaminan keuntungan. Trading aset kripto berisiko. Uji dengan nominal kecil dan pahami kode sebelum menggunakannya. Bot dapat mengeksekusi order sungguhan pada akun Indodax Anda.
 
