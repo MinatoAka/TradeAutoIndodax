@@ -109,16 +109,17 @@ Jalankan fungsi berikut dari editor Google Apps Script sesuai kebutuhan:
 ### Menjalankan bot dan mengatur jadwal
 
 - `jalankanBotUtama()` — menjalankan satu siklus bot secara manual.
-- Pilih **satu** fungsi untuk membuat trigger otomatis: `createBotTrigger15Minutes()`, `createBotTrigger30Minutes()`, `createBotTrigger1Hour()`, `createBotTrigger2Hours()`, atau `createBotTrigger4Hours()`.
-- `deleteBotTriggers()` — menghapus trigger otomatis untuk `jalankanBotUtama`.
+- Pilih **satu** fungsi untuk membuat trigger otomatis:
+  * `createBotTrigger15Minutes()` bot dijalankan setiap 15 menit,
+  * `createBotTrigger30Minutes()` bot dijalankan setiap 30 menit,
+  * `createBotTrigger1Hour()` bot dijalankan setiap 1 jam,
+  * `createBotTrigger2Hours()` bot dijalankan setiap 2 jam,
+  * `createBotTrigger4Hours()` bot dijalankan setiap 4 jam.
 
 ### Pengaturan dan reset
 
 - `setSinglePositionMode()` — menerapkan cooldown 30 menit dan batas maksimal 2 trade per hari.
-- `setBotStatus('KOSONG')` atau `setBotStatus('PEGANG')` — mengubah status posisi bot.
 - `resetStatusBot()` — menghapus status, state trade, log, dan error tersimpan. Setelah reset, status default menjadi `KOSONG`.
-
-> **Catatan:** `createBotTriggers()` tidak tersedia di kode saat ini. Gunakan salah satu fungsi trigger yang tercantum di atas.
 
 ## Catatan keamanan
 
