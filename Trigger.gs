@@ -2,6 +2,10 @@
 // Trigger.gs
 // Menangani trigger otomatis untuk menjalankan bot utama
 // ==========================================
+function createBotTrigger4Hours() {
+  return createBotTriggerEveryHours(4);
+}
+
 function createBotTrigger2Hours() {
   return createBotTriggerEveryHours(2);
 }
