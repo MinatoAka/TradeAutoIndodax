@@ -2,14 +2,18 @@
 // Config.gs
 // Menyimpan dan membaca konfigurasi bot
 // ==========================================
+
+const customHeaders = {
+  "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+  "Accept-Language": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
+  "Accept": "application/json, text/plain, */*",
+  "Referer": "https://google.com"
+};
+
 const optHeaders = {
   method: 'get',
-  muteHttpExceptions: true,
-  headers: {
-    'Accept': 'application/json, text/plain, */*',
-    'Accept-Language': 'id-ID,id;q=0.9, en-US;q=0.8, en;q=0.7',
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-  }
+  headers: customHeaders,
+  muteHttpExceptions: true
 };
 
 /**
