@@ -2,9 +2,12 @@
 // Trigger.gs
 // Menangani trigger otomatis untuk menjalankan bot utama
 // ==========================================
-function createBotTriggers() {
-  // Default: 30 menit untuk strategi yang lebih aman.
-  return createBotTrigger30Minutes();
+function createBotTrigger2Hours() {
+  return createBotTriggerEveryHours(2);
+}
+
+function createBotTrigger1Hour() {
+  return createBotTriggerEveryHours(1);
 }
 
 function createBotTrigger15Minutes() {
@@ -28,6 +31,19 @@ function createBotTriggerEveryMinutes(intervalMinutes) {
     .create();
 
   Logger.log('✅ Trigger bot dibuat setiap ' + intervalMinutes + ' menit.');
+  return true;
+}
+
+function createBotTriggerEveryHours(intervalHours) {
+
+  deleteBotTriggers();
+
+  ScriptApp.newTrigger('jalankanBotUtama')
+    .timeBased()
+    .everyHours(intervalHours)
+    .create();
+
+  Logger.log('✅ Trigger bot dibuat setiap ' + intervalHours + ' menit.');
   return true;
 }
 
